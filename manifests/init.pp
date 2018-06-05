@@ -91,9 +91,28 @@ class mailserver (
 
 	$sslcert_src = "puppet:///ssl",	
 
+
+	$dkim_selector = undef,
+	$dkim_source = "puppet:///dkim",
+
 	
 
 ) inherits mailserver::params {
+
+
+	if $dkim_selector != undef {
+		class {"mailserver::install_opendkim":
+			selector => $dkim_selector,
+			dkim_source => $dkim_source			
+		}
+		service {"$opendkim_service":
+			ensure => "running"
+		}
+
+	}
+
+
+
 
 	$_myorigin = $myorigin ? {
 		undef => $myhostname,
