@@ -59,7 +59,7 @@ class mailserver (
 
 	$myhostname ,
 	$mydestination = [],
-	$myorigin = "",
+	$myorigin = undef,
 
 
 	$clamav_infected_action = "Reject",
@@ -94,6 +94,13 @@ class mailserver (
 	
 
 ) inherits mailserver::params {
+
+	$_myorigin = $myorigin ? {
+		undef => $myhostname,
+		default => $myorigin,
+	}
+
+
 
 	$_imap_hostname = $imap_hostname ? {
 		undef => $myhostname,
