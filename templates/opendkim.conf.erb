@@ -1,3 +1,9 @@
+#
+# Managed by Puppet.
+#
+# Do not edit! 
+#
+
 ##
 ## opendkim.conf -- configuration file for OpenDKIM filter
 ##
@@ -159,7 +165,7 @@
 ##  Specify for which domain(s) signing should be done.  No default; must
 ##  be specified for signing.
 
-Domain			example.com
+Domain	<%= @domains %>
 
 ##  DomainKeysCompat { yes | no }
 ##  	default "no"

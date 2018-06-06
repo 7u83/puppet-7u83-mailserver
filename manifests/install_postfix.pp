@@ -1,5 +1,3 @@
-#
-#
 
 class mailserver::install_postfix(
 	$ldap = true

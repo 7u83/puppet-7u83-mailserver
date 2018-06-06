@@ -2,6 +2,7 @@
 class mailserver::install_opendkim(
 	$dkim_source = "puppet:///dkim",
 	$selector,
+	$domains,
 
 ) inherits mailserver::params
 {

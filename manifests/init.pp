@@ -93,6 +93,7 @@ class mailserver (
 
 
 	$dkim_selector = undef,
+	$dkim_domains = undef,
 	$dkim_source = "puppet:///dkim",
 
 	
@@ -100,23 +101,30 @@ class mailserver (
 ) inherits mailserver::params {
 
 
+
+	$_myorigin = $myorigin ? {
+		undef => $myhostname,
+		default => $myorigin,
+	}
+
 	if $dkim_selector != undef {
+		if $dkim_domains == undef {
+			$_dkim_domains = $myorigin
+		}
+		else {
+			$_dkim_domains = $dkim_domains
+		}
+
 		class {"mailserver::install_opendkim":
 			selector => $dkim_selector,
-			dkim_source => $dkim_source			
+			domains => $_dkim_domains,
+
+			dkim_source => $dkim_source,
 		}
 		service {"$opendkim_service":
 			ensure => "running"
 		}
 
-	}
-
-
-
-
-	$_myorigin = $myorigin ? {
-		undef => $myhostname,
-		default => $myorigin,
 	}
 
 
