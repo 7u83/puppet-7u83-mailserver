@@ -474,6 +474,7 @@ class mailserver::mx(
 
 	$mynetworks = [],
 
+	$postscreen = false
 
 
 )inherits mailserver::params{
@@ -494,9 +495,34 @@ class mailserver::mx(
 	$pfmynetworks = join($mynetworks," ")
 
 
+	if $postscreen {
+		mailserver::service{ "Postscrren server for $hostname":
+			service => 'smtp',
+			command => 'postscreen',
+			maxproc => 1,
+			args => [],
+		}
+
+		$chroot = '-'
+		$private = '-'
+		$service = 'smtpd'
+		$type = 'pass'
+
+	}
+	else {
+		$chroot = 'n'
+		$private = 'n'
+		$service = 'smtp'
+		$type = 'inet'
+	}
+	
+
 	mailserver::service{ "MX server for $hostname":
-		service => 'smtp',
+		service => $service,
 		command => 'smtpd',
+		type => $type,
+		private => $private,
+		chroot => $chroot,
 		args => [
 			"{ -o smtpd_recipient_restrictions = $pfrecipient_restrictions $pfrbls }",
 			"{ -o smtpd_client_restrictions = $pfclient_restrictions }",
