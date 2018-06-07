@@ -205,7 +205,7 @@ class mailserver (
 	}
 
 
-	notify {"$_smtpd_sslkey":}
+#	notify {"$_smtpd_sslkey":}
 
 
 
