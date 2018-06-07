@@ -96,7 +96,7 @@ class mailserver (
 	$dkim_domains = undef,
 	$dkim_source = "puppet:///dkim",
 
-	
+	$mailman = false,	
 
 ) inherits mailserver::params {
 
@@ -352,6 +352,11 @@ class mailserver (
 #	}
 
 	
+
+	if $mailman == true {
+		class {"mailserver::install_mailman3":
+		}
+	}
 	
 
 }	

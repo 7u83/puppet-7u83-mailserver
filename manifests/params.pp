@@ -45,6 +45,9 @@ class mailserver::params {
 			$opendkim_gid='postfix'
 			$opendkim_socket='/var/spool/postfix/private/opendkim'
 			$opendkim_milter_sock='unix:/var/spool/postfix/private/opendkim'
+
+
+			$mailman_dir = "/usr/local/mailman"
 		}
 	}
 
