@@ -60,6 +60,7 @@ class mailserver (
 	$myhostname ,
 	$mydestination = [],
 	$myorigin = undef,
+	$mynetworks = ["127.0.0.1/32"],
 
 
 	$clamav_infected_action = "Reject",
@@ -96,11 +97,30 @@ class mailserver (
 	$dkim_domains = undef,
 	$dkim_source = "puppet:///dkim",
 
-	$mailman = false,	
+	$mailman = false,
+	$mailman_remove_dkim = false,
+
+
+	$mailbox_size_limit = 0,
 
 ) inherits mailserver::params {
 
+	$pfmydestination = join($mydestination," ")
+	$pfmynetworks = join($mynetworks," ")
 
+	if $mailman == true {
+		ensure_resource ("class","mailserver::install_postfix",{
+			ldap  => $ldap
+		})
+		Class["mailserver::install_mailman3"] -> Class["mailserver::mailman_service"] 
+
+		class {"mailserver::install_mailman3":
+			remove_dkim => $mailman_remove_dkim
+		}
+		class {"mailserver::mailman_service":}
+		$mailman_local_maps = "hash:$mailman_vardir/data/postfix_lmtp"
+	}
+	
 
 	$_myorigin = $myorigin ? {
 		undef => $myhostname,
@@ -108,6 +128,9 @@ class mailserver (
 	}
 
 	if $dkim_selector != undef {
+		ensure_resource ("class","mailserver::install_postfix",{
+			ldap  => $ldap
+		})
 		if $dkim_domains == undef {
 			$_dkim_domains = $myorigin
 		}
@@ -120,9 +143,11 @@ class mailserver (
 			domains => $_dkim_domains,
 
 			dkim_source => $dkim_source,
+			mynetworks => $mynetworks
 		}
 		service {"$opendkim_service":
-			ensure => "running"
+			ensure => "running",
+			subscribe => Class["mailserver::install_opendkim"]
 		}
 
 	}
@@ -217,7 +242,6 @@ class mailserver (
 
 
 
-	$pfmydestination = join($mydestination," ")
 
 	if $mail_location == "mbox" {
 		$dovecot_mail_location = "mbox:~/mail:LAYOUT=maildir++:INBOX=/var/mail/%u:INDEX=~/mail/index:CONTROL=~/mail/control"
@@ -234,9 +258,12 @@ class mailserver (
 
 
 		
-	class {"mailserver::install_postfix":
-		ldap => $ldap
-	}
+#	class {"mailserver::install_postfix":
+#		ldap => $ldap
+#	}
+	ensure_resource ("class","mailserver::install_postfix",{
+		ldap  => $ldap
+	})
 
 	class {"mailserver::install_clamav":
 		ldap => $ldap
@@ -353,11 +380,6 @@ class mailserver (
 
 	
 
-	if $mailman == true {
-		class {"mailserver::install_mailman3":
-		}
-	}
-	
 
 }	
 
@@ -542,7 +564,6 @@ class mailserver::mx(
 			"{ -o smtpd_helo_restrictions = $pfhelo_restrictions }",
 			"{ -o smtpd_relay_restrictions = $pfrelay_restrictions }",
 			"{ -o smtpd_milters = $pflmilters $pfmilters}",
-			"{ -o mynetworks = $pfmynetworks }",
 			"{ -o smtpd_sasl_auth_enable = no }",
 		]
 
@@ -565,7 +586,6 @@ class mailserver::submission(
 	],
 	$recipient_restrictions = [
 		"reject_unknown_recipient_domain",
-		"reject_unverified_recipient",
 		"permit_sasl_authenticated",
 		"reject",
 	],
@@ -588,14 +608,27 @@ class mailserver::submission(
 
 	$mynetworks = [],
 
-	$ldap_login_map =[] 
+	$ldap_login_map =[],
 
+	$tls_security = 'encrypt',
+
+	$verify_recipient = false
 
 
 )inherits mailserver::params{
 
 	$pfclient_restrictions = join($client_restrictions," ")
-	$pfrecipient_restrictions = join($recipient_restrictions," ")
+
+	if $verify_recipient {
+		$_reject_unverified_recipient = "reject_unverified_recipient"
+	}
+	
+	$pfrecipient_restrictions = join(
+			concat($recipient_restrictions,$_reject_unverified_recipient),
+			" ")
+
+
+
 	$pfhelo_restrictions = join($helo_restrictions, " ")
 	$pfrelay_restrictions =  join($relay_restrictions, " ")
 	$pfsender_restrictions = join($sender_restrictions, " ")
@@ -606,11 +639,11 @@ class mailserver::submission(
 	]," ")
 
 	$pfmilters = join($milters," ")
-	$pfmynetworks = join($mynetworks," ")
+#	$pfmynetworks = join($mynetworks," ")
 
 	$kf = $::mailserver::_smtpd_sslkey
 
-	$ssl_options ="{ -o smtpd_use_tls = yes }
+	$ssl_options ="{ -o smtpd_tls_security_level = $tls_security }
 	{ -o smtp_tls_note_starttls_offer = yes }
 	{ -o smtpd_tls_key_file = $kf }
 	{ -o smtpd_tls_cert_file = $::mailserver::_smtpd_sslcert }
@@ -628,7 +661,6 @@ class mailserver::submission(
 			"{ -o smtpd_helo_restrictions = $pfhelo_restrictions }",
 			"{ -o smtpd_relay_restrictions = $pfrelay_restrictions }",
 			"{ -o smtpd_milters = $pflmilters $pfmilters}",
-			"{ -o mynetworks = $pfmynetworks }",
 			"{ -o smtpd_sasl_auth_enable = yes }",
 			"{ -o smtpd_sasl_type = dovecot }",
 			"{ -o smtpd_sasl_path = /var/spool/postfix/private/auth }",

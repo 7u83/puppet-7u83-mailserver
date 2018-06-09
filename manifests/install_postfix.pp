@@ -21,6 +21,10 @@ class mailserver::install_postfix(
 				}
 			}
 
+			ensure_resource("file","/usr/local/etc/mail",{
+				ensure => directory
+			})
+
 			file {"/usr/local/etc/mail/mailer.conf":
 				ensure => present,
 				content => template("mailserver/mailer.conf.erb")

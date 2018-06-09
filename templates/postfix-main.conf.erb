@@ -289,6 +289,8 @@ mynetworks_style = host
 #mynetworks = 168.100.189.0/28, 127.0.0.0/8
 #mynetworks = $config_directory/mynetworks
 #mynetworks = hash:$config_directory/network_table
+#
+mynetworks = <%= @pfmynetworks %>
 
 # The relay_domains parameter restricts what destinations this system will
 # relay mail to.  See the smtpd_recipient_restrictions description in
@@ -698,4 +700,22 @@ shlib_directory = /usr/local/lib/postfix
 # additional 
 
 non_smtpd_milters = <%= @non_smtpd_milters %>
+
+
+mailbox_size_limit = <%= @mailbox_size_limit %>
+
+
+
+recipient_delimiter = +
+unknown_local_recipient_reject_code = 550
+owner_request_special = no
+transport_maps = <%= @mailman_local_maps %>
+#address_verify_transport_maps = <%= @mailman_local_maps %>
+local_recipient_maps = proxy:unix:passwd.byname $alias_maps <%= @mailman_local_maps %>
+
+# hash:/var/mailman/data/postfix_lmtp
+#relay_domains =
+#    hash:/var/mailman/var/data/postfix_domains
+#address_verify_default_transport = direct_smtp
+#address_verify_relayhost = 192.168.1.125
 

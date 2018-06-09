@@ -33,7 +33,7 @@ class mailserver::install_dovecot(
 
 			package {"dovecot":
 				provider => "portsng",
-				ensure => 'installed',
+				ensure => 'latest',
 				package_settings => {
 					'LDAP' => $ldap,
 					'SOLR' => $solr,

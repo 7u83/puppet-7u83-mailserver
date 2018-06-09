@@ -1,13 +1,16 @@
+# dkim install
 
 class mailserver::install_opendkim(
 	$dkim_source = "puppet:///dkim",
 	$selector,
 	$domains,
+	$mynetworks,
 
 ) inherits mailserver::params
 {
 
 	$keyfile  = "$opendkim_keysdir/${selector}.private"
+	$dkmynetworks = join($mynetworks,", ")
 
         case $::osfamily {
                 'FreeBSD':{

@@ -1,6 +1,7 @@
 class mailserver::params {
         case $::osfamily {
                 'FreeBSD':{
+			$sucmd = "/usr/bin/su"
 
 			$etcdir = "/usr/local/etc"
 
@@ -47,9 +48,23 @@ class mailserver::params {
 			$opendkim_milter_sock='unix:/var/spool/postfix/private/opendkim'
 
 
-			$mailman_dir = "/usr/local/mailman"
+			$mailman_vardir = "/usr/local/mailman3"
+			$mailman_cfg = "/usr/local/etc/mailman.cfg"
+			$mailman_shell = "/bin/sh"
+			$mailman_dbdir = "/var/db/mailman"
+			$mailman_piddir = "/var/run/mailman"
+			$mailman_bindir = "/usr/local/bin"
+			$mailman_etcdir = "/usr/local/etc"
+			$mailman_spooldir = "/var/spool/mailman"
+			$mailman_logdir = "/var/log/mailman"
+			$mailman_postmap_command = "/usr/local/sbin/postmap"
+
+
 		}
 	}
+
+	$mailman_user = "mailman"
+	$mailman_group = "mailman"
 
 	$ssldir = "$etcdir/ssl"
 }
