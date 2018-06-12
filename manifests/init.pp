@@ -97,7 +97,9 @@ class mailserver (
 	$dkim_domains = undef,
 	$dkim_source = "puppet:///dkim",
 
+	$mailman3 = false,
 	$mailman = false,
+
 	$mailman_remove_dkim = false,
 
 
@@ -108,7 +110,7 @@ class mailserver (
 	$pfmydestination = join($mydestination," ")
 	$pfmynetworks = join($mynetworks," ")
 
-	if $mailman == true {
+	if $mailman3 == true {
 		ensure_resource ("class","mailserver::install_postfix",{
 			ldap  => $ldap
 		})
@@ -369,9 +371,10 @@ class mailserver (
 
 	service {"$dovecot_service":
 		ensure => running,
-		require => Class["mailserver::install_dovecot"],
 		subscribe => Class["mailserver::install_dovecot"],
-
+		require => [Class["mailserver::install_dovecot"],File["$ssldir/$_imap_hostname/fullchain.pem"],File["$ssldir/$_imap_hostname/privkey.pem"]]
+#
+#
 	}
 
 #	mailserver::install_sslcert {"$myhostname":
