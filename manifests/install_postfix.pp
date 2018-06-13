@@ -1,6 +1,8 @@
+#install postfix
 
 class mailserver::install_postfix(
-	$ldap = true
+	$ldap = true,
+
 ) {
         case $::osfamily {
                 'FreeBSD':{
@@ -43,4 +45,6 @@ class mailserver::install_postfix(
                         }
 		}
 	}
+
+
 }

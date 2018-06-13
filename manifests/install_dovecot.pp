@@ -12,6 +12,8 @@ class mailserver::install_dovecot(
 	$ldap_base,
 	$ldap_pass_filter,
 	$ldap_user_filter,
+	$ldap_lmtp_user_filter,
+
 	$ldap_hosts,
 	$ldap_dn,
 	$ldap_pass,
@@ -22,6 +24,8 @@ class mailserver::install_dovecot(
 	$imap_ssl = true,
 	$imap_sslkey,
 	$imap_sslcert,
+	$virtual_mailbox_base,
+	$ldap_login_maps_result_attribute,
 
 
 
@@ -77,7 +81,9 @@ class mailserver::install_dovecot(
 		"conf.d/10-auth.conf",
 		"conf.d/10-ssl.conf",
 		"conf.d/20-imap.conf",
+		"conf.d/20-lmtp.conf",
 		"dovecot-ldap.conf.ext",
+		"dovecot-lmtp-ldap.conf.ext",
 		"conf.d/auth-system.conf.ext",
 		"conf.d/auth-ldap.conf.ext",
 	]

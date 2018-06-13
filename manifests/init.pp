@@ -8,7 +8,6 @@
 #
 # Document parameters here.
 #
-# * `sample parameter`
 # Explanation of what this parameter affects and what it defaults to.
 # e.g. "Specify one or more upstream ntp servers as an array."
 #
@@ -48,11 +47,15 @@ class mailserver (
 	$ldap_base="",
 	$ldap_pass_filter="(&(objectClass=posixAccount)(uid=%u))",
 	$ldap_user_filter="(&(objectClass=posixAccount)(uid=%u))",
+	$ldap_lmtp_user_filter=undef,
 	$ldap_login_maps_query=undef,
 	$ldap_login_maps_result_attribute=undef,
 	$ldap_hosts = [],
 	$ldap_dn = undef,
 	$ldap_pass = undef,
+
+	$vmail_user="vmail", 
+	$vmail_group="vmail",
 
 
 	$mail_location = "mbox",
@@ -100,15 +103,45 @@ class mailserver (
 	$mailman3 = false,
 	$mailman = false,
 
+	$sympa = false,
+	$listmaster = undefm,
+
+
 	$mailman_remove_dkim = false,
 
 
 	$mailbox_size_limit = 0,
 
+
+
+	$virtual_mailbox_domains = [],
+	$virtual_mailbox_base = "/",
+
+	$submission = true,
+	$submission_verify_recipient = false,
+
+
+
 ) inherits mailserver::params {
+
+	if $ldap_lmtp_user_filter != undef {
+		$_ldap_lmtp_user_filter = $ldap_lmtp_user_filter
+	}
+	else{
+		$_ldap_lmtp_user_filter = $ldap_user_filter
+	}
+
 
 	$pfmydestination = join($mydestination," ")
 	$pfmynetworks = join($mynetworks," ")
+	if $ldap {
+		$_virtual_mailbox_maps = "ldap:$postfix_dir/ldap_login_maps.cf"
+	}
+
+
+
+	$_virtual_mailbox_domains = join($virtual_mailbox_domains," ")
+
 
 	if $mailman3 == true {
 		ensure_resource ("class","mailserver::install_postfix",{
@@ -128,6 +161,27 @@ class mailserver (
 		undef => $myhostname,
 		default => $myorigin,
 	}
+
+	if $sympa == true {
+		class {"mailserver::install_sympa":
+			listmaster => $listmaster,
+			domain => $_myorigin,
+
+		}
+	}
+
+
+	user {"$vmail_user":
+		ensure => present,
+		uid => "400",
+	}
+
+	group {"$vmail_group":
+		ensure => present,
+		gid => "400",
+	}
+
+
 
 	if $dkim_selector != undef {
 		ensure_resource ("class","mailserver::install_postfix",{
@@ -277,6 +331,7 @@ class mailserver (
 		ldap_base => $ldap_base,
 		ldap_pass_filter => $ldap_pass_filter,
 		ldap_user_filter => $ldap_user_filter,
+		ldap_lmtp_user_filter => $_ldap_lmtp_user_filter, 
 		ldap_auth_bind => $ldap_auth_bind,
 		ldap_dn => $ldap_dn,
 		ldap_pass => $ldap_pass,
@@ -293,6 +348,12 @@ class mailserver (
 
 		imap_sslcert => $_imap_sslcert,
 		imap_sslkey => $_imap_sslkey,
+
+		virtual_mailbox_base => $virtual_mailbox_base,
+		ldap_login_maps_result_attribute => $ldap_login_maps_result_attribute,
+
+#		vmail_user => $vmail_user,
+#		vmail_group = $vmail_group,
 
 
 	}
@@ -341,10 +402,13 @@ class mailserver (
 		]
 	}
 
+
+
+
 	service { "$postfix_service":
 		ensure => running,
 		require => Concat["$postfix_master_cf"],
-		subscribe => [Concat["$postfix_master_cf"], File["$postfix_main_cf"]]
+		subscribe => [Concat["$postfix_master_cf"], File["$postfix_main_cf"], File["$postfix_dir/ldap_login_maps.cf"]]
 		
 	}
 
@@ -361,6 +425,7 @@ class mailserver (
 		order => '00',
 		content => template('mailserver/postfix-master-header.conf.erb'),
 	}
+
 
 	mailserver::postfix_ldapmap{ "ldap_login_maps.cf":
 		query_filter => $ldap_login_maps_query,
@@ -381,7 +446,20 @@ class mailserver (
 #		owner => postfix
 #	}
 
-	
+
+	if $submission {	
+		if $ldap {
+			$sender_login_maps = [
+				"ldap:$postfix_dir/ldap_login_maps.cf"
+			]
+		}
+		class {"mailserver::submission":
+			hostname => $myhostname,
+			sender_login_maps => $sender_login_maps,
+			verify_recipient => $submission_verify_recipient,
+		}
+	}
+
 
 
 }	
@@ -468,14 +546,14 @@ define mailserver::postfix_ldapmap(
 	$query_filter,
 	$result_attribute
 ){
-	$xldap_hosts = join($mailserver::ldap_hosts," ")
+	$_ldap_hosts = join($mailserver::ldap_hosts," ")
 	file {"$::mailserver::params::postfix_dir/$title":
 		ensure => present,
 		content => "bind=yes
 bind_dn=$::mailserver::ldap_dn
 bind_pw=$::mailserver::ldap_pass
-search_base_pw=$::mailserver::ldap_base
-server_host=$xldap_hosts
+search_base=$::mailserver::ldap_base
+server_host=$_ldap_hosts
 version=3
 query_filter=$query_filter
 result_attribute=$result_attribute
@@ -495,6 +573,7 @@ class mailserver::mx(
 	],
 	$recipient_restrictions = [
 		"permit_mynetworks",
+		"reject_unverified_recipient",
 		"reject_unauth_destination"
 	],
 	$helo_restrictions = [
@@ -572,6 +651,21 @@ class mailserver::mx(
 
 	}
 
+	mailserver::service{ "Dovecot for $hostname":
+		service => dovecot,
+		type => "unix",
+		private =>'-',
+		unpriv => 'n',
+		chroot => 'n',
+		wakeup => '-',	
+		maxproc => '-',
+		command => "pipe",
+		args => [
+			"flags=DRhu user=vmail:vmail argv=$dovecot_lda -f \${sender} -d \${recipient}",
+		]
+
+	}
+
 
 }
 
@@ -615,7 +709,10 @@ class mailserver::submission(
 
 	$tls_security = 'encrypt',
 
-	$verify_recipient = false
+	$verify_recipient = false,
+
+	$sender_login_maps = [],
+
 
 
 )inherits mailserver::params{
@@ -635,6 +732,9 @@ class mailserver::submission(
 	$pfhelo_restrictions = join($helo_restrictions, " ")
 	$pfrelay_restrictions =  join($relay_restrictions, " ")
 	$pfsender_restrictions = join($sender_restrictions, " ")
+
+	
+	$_sender_login_maps = join($sender_login_maps, " ")
 
 	$pflmilters = join([
 		$clamav_milter_sock,
@@ -658,7 +758,7 @@ class mailserver::submission(
 		service => 'submission',
 		command => 'smtpd',
 		args => [
-			"{ -o smtpd_sender_restrictions = $pfsender_restrictions $kf }",
+			"{ -o smtpd_sender_restrictions = $pfsender_restrictions }",
 			"{ -o smtpd_recipient_restrictions = $pfrecipient_restrictions }",
 			"{ -o smtpd_client_restrictions = $pfclient_restrictions }",
 			"{ -o smtpd_helo_restrictions = $pfhelo_restrictions }",
@@ -667,6 +767,7 @@ class mailserver::submission(
 			"{ -o smtpd_sasl_auth_enable = yes }",
 			"{ -o smtpd_sasl_type = dovecot }",
 			"{ -o smtpd_sasl_path = /var/spool/postfix/private/auth }",
+			"{ -o smtpd_sender_login_maps = $_sender_login_maps }",
 			"$ssl_options",
 		]
 	}

@@ -696,6 +696,19 @@ meta_directory = /usr/local/libexec/postfix
 shlib_directory = /usr/local/lib/postfix
 
 
+virtual_mailbox_domains = <%= @_virtual_mailbox_domains %>
+virtual_mailbox_base = <%= @virtual_mailbox_base %>
+virtual_mailbox_maps = <%= @_virtual_mailbox_maps %>
+virtual_uid_maps = static:400
+virtual_gid_maps = static:400
+
+#virtual_transport = dovecot
+virtual_transport = lmtp:unix:/var/run/dovecot/lmtp
+mailbox_transport = lmtp:unix:/var/run/dovecot/lmtp
+
+
+unverified_recipient_reject_code = 550
+unverified_recipient_reject_reason  = Unknown addres
 
 # additional 
 

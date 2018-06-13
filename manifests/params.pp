@@ -18,6 +18,7 @@ class mailserver::params {
 			$dovecot_cfgbasedir = '/usr/local/etc/dovecot'
 			$dovecot_cfgconfdir = '/usr/local/etc/dovecot/conf.d'
 			$dovecot_deliver = '/usr/local/libexec/dovecot/deliver'
+			$dovecot_lda = '/usr/local/libexec/dovecot/dovecot-lda'
 
 
 			$alias_database = 'hash:/etc/mail/aliases'
@@ -58,6 +59,10 @@ class mailserver::params {
 			$mailman_spooldir = "/var/spool/mailman"
 			$mailman_logdir = "/var/log/mailman"
 			$mailman_postmap_command = "/usr/local/sbin/postmap"
+
+
+
+			$sympa_conf = "/usr/local/etc/sympa/sympa.conf"
 
 
 		}

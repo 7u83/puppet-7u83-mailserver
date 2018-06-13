@@ -144,6 +144,11 @@ user_filter = <%= @ldap_user_filter %>
 # string. For example:
 #pass_attrs = uid=user,userPassword=password,\
 #  homeDirectory=userdb_home,uidNumber=userdb_uid,gidNumber=userdb_gid
+user_attrs = \
+	=home=<%=@virtual_mailbox_base%>/%{ldap:<%=@ldap_login_maps_result_attribute%>},\
+	=uid=400, \
+	=gid=400 
+
 
 # Filter for password lookups
 #pass_filter = (&(objectClass=posixAccount)(uid=%u))
