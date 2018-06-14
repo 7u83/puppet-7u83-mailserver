@@ -12,6 +12,8 @@ class mailserver::params {
 			$postfix_master_cf = '/usr/local/etc/postfix/master.cf'
 			$postfix_service = 'postfix'
 			$postfix_dir = "/usr/local/etc/postfix"
+			$postmap_cmd = "/usr/local/sbin/postmap"
+			$postalias_cmd = "/usr/local/sbin/postalias"
 
 
 			$dovecot_service = 'dovecot'
@@ -58,11 +60,14 @@ class mailserver::params {
 			$mailman_etcdir = "/usr/local/etc"
 			$mailman_spooldir = "/var/spool/mailman"
 			$mailman_logdir = "/var/log/mailman"
-			$mailman_postmap_command = "/usr/local/sbin/postmap"
 
 
 
 			$sympa_conf = "/usr/local/etc/sympa/sympa.conf"
+			$sympa_aliases = "/usr/local/etc/sympa/sympa_aliases"
+			$sympa_sendmail_aliases ="/usr/local/etc/sympa/sympa_sendmail_aliases"
+			$sympa_libexec_dir="/usr/local/libexec/sympa"
+			
 
 
 		}
@@ -70,6 +75,7 @@ class mailserver::params {
 
 	$mailman_user = "mailman"
 	$mailman_group = "mailman"
+	$mailman_postmap_command = "$postmap_cmd"
 
 	$ssldir = "$etcdir/ssl"
 }

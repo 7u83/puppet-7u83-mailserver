@@ -414,7 +414,11 @@ mynetworks = <%= @pfmynetworks %>
 #alias_maps = hash:/etc/aliases, nis:mail.aliases
 #alias_maps = netinfo:/aliases
 #
+<% if @sympa %>
+alias_maps = <%= @alias_maps %> hash:<%= @sympa_aliases %> hash:<%= @sympa_sendmail_aliases %>
+<% else %>
 alias_maps = <%= @alias_maps %>
+<% end %>
 
 
 # The alias_database parameter specifies the alias database(s) that
@@ -704,7 +708,7 @@ virtual_gid_maps = static:400
 
 #virtual_transport = dovecot
 virtual_transport = lmtp:unix:/var/run/dovecot/lmtp
-mailbox_transport = lmtp:unix:/var/run/dovecot/lmtp
+#mailbox_transport = lmtp:unix:/var/run/dovecot/lmtp
 
 
 unverified_recipient_reject_code = 550

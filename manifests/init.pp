@@ -104,7 +104,10 @@ class mailserver (
 	$mailman = false,
 
 	$sympa = false,
-	$listmaster = undefm,
+	$sympa_db_user = undef,
+	$sympa_db_passwd = undef,
+
+	$listmaster = undef,
 
 
 	$mailman_remove_dkim = false,
@@ -164,10 +167,33 @@ class mailserver (
 
 	if $sympa == true {
 		class {"mailserver::install_sympa":
-			listmaster => $listmaster,
-			domain => $_myorigin,
+#			listmaster => $listmaster,
+#			domain => $_myorigin,
 
 		}
+		$sympa_domain = $_myorigin
+		$wwsympa_url = "http://localhost"
+
+		file {"$sympa_conf":
+			ensure => file,
+			content => template("mailserver/sympa.conf.erb"),
+			require => Class["mailserver::install_sympa"]
+		}
+		file {"$sympa_aliases":
+			ensure => file,
+			content => template("mailserver/sympa_aliases.erb"),
+			require => Class["mailserver::install_sympa"]
+		}
+		file {"$sympa_sendmail_aliases":
+			ensure => file,
+			owner => "sympa",
+			group => "sympa",
+			require => Class["mailserver::install_sympa"]
+		}
+
+
+
+
 	}
 
 

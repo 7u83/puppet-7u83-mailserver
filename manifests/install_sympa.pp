@@ -1,8 +1,8 @@
 #
 class mailserver::install_sympa
 (
-	$domain,
-	$listmaster,
+#	$domain,
+#	$listmaster,
 
 )
 inherits mailserver::params
@@ -11,7 +11,7 @@ inherits mailserver::params
 
         case $::osfamily {
                 'FreeBSD':{
-			$packages = ["sympa","p5-DBD-mysql"],
+			$packages = ["sympa","p5-DBD-mysql"]
 			package {$packages:
 				ensure => "installed",
 			}
@@ -20,11 +20,6 @@ inherits mailserver::params
 		}
 		default: {
 		}
-	}
-
-	file {"$sympa_conf":
-		ensure => file,
-		content => template("mailserver/sympa.conf.erb"),
 	}
 
 

@@ -5,8 +5,11 @@
 ## Example: domain	mail.example.org
 #domain	(You must define this parameter)
 <% if @domain %>
-domain	<%= @domain %>
+domain	<%= @sympa_domain %>
 <% end %>
+
+sendmail_aliases <%= @sympa_sendmail_aliases %>
+aliases_program <%= @postalias_cmd %>
 
 ## listmaster
 ## Email addresses of listmasters
@@ -81,6 +84,7 @@ listmaster	<%= @listmaster %>
 ## User for the database connection
 ## Example: db_user	sympa
 #db_user	user_name
+db_user 	<%= @sympa_db_user %>
 
 ## db_passwd
 ## Password for the database connection
@@ -88,6 +92,7 @@ listmaster	<%= @listmaster %>
 ## not a public internet service ?)
 ## Example: db_passwd	your_passwd
 #db_passwd	user_password
+db_passwd	<%= @sympa_db_passwd %>
 
 ## db_env
 ## Environment variables setting for database
@@ -564,6 +569,7 @@ listmaster	<%= @listmaster %>
 ## This is used to construct URLs of web interface.
 ## Example: wwsympa_url	http://web.example.org/sympa
 #wwsympa_url	(You must define this parameter)
+wwsympa_url = <%= @wwsympa_url %>
 
 ## http_host
 ## URL prefix of WWSympa behind proxy
