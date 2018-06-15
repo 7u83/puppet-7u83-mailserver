@@ -10,6 +10,7 @@ domain	<%= @sympa_domain %>
 
 sendmail_aliases <%= @sympa_sendmail_aliases %>
 aliases_program <%= @postalias_cmd %>
+dmarc_protection_mode <%= @sympa_dmarc_protection_mode %>
 
 ## listmaster
 ## Email addresses of listmasters
@@ -19,8 +20,8 @@ aliases_program <%= @postalias_cmd %>
 ## listmasters will have privileges to manage all virtual hosts.
 ## Example: listmaster	your_email_address@domain.tld
 #listmaster	(You must define this parameter)
-<% if @listmaster %>
-listmaster	<%= @listmaster %>
+<% if @sympa_listmaster %>
+listmaster	<%= @sympa_listmaster %>
 <% end %>
 
 ## lang
@@ -69,6 +70,7 @@ listmaster	<%= @listmaster %>
 ## "/var/run/postgresql" for connection with Unix domain socket.
 ## Example: db_host	localhost
 #db_host	localhost
+db_host <%= @_sympa_db_host %>
 
 ## db_port
 ## Port of the database server
@@ -79,6 +81,7 @@ listmaster	<%= @listmaster %>
 ## With SQLite, this must be the full path to database file. With Oracle
 ## Database, this must be Oracle SID.
 #db_name	sympa
+db_name <%= @sympa_db_name %>
 
 ## db_user
 ## User for the database connection
@@ -569,7 +572,7 @@ db_passwd	<%= @sympa_db_passwd %>
 ## This is used to construct URLs of web interface.
 ## Example: wwsympa_url	http://web.example.org/sympa
 #wwsympa_url	(You must define this parameter)
-wwsympa_url = <%= @wwsympa_url %>
+wwsympa_url <%= @sympa_url %>
 
 ## http_host
 ## URL prefix of WWSympa behind proxy
@@ -579,10 +582,14 @@ wwsympa_url = <%= @wwsympa_url %>
 ## URL for static contents
 ## HTTP server have to map it with "static_content_path" directory.
 #static_content_url	/static-sympa
+static_content_url	<%= @sympa_static_web_location %>
+
 
 ## static_content_path
 ## Directory for static contents
 #static_content_path	/usr/local/share/sympa/static
+static_content_path	<%= @sympa_static_dir %>
+
 
 ## log_facility
 ## System log facility for web interface

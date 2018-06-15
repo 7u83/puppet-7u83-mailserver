@@ -42,6 +42,8 @@
 # Copyright 2018 Your name here, unless otherwise noted.
 #
 class mailserver (
+	$localhost = "127.0.0.1",
+
 	$ldap = true,
 	$ldap_auth_bind="no",
 	$ldap_base="",
@@ -103,11 +105,21 @@ class mailserver (
 	$mailman3 = false,
 	$mailman = false,
 
-	$sympa = false,
-	$sympa_db_user = undef,
-	$sympa_db_passwd = undef,
 
-	$listmaster = undef,
+	
+	$sympa = false,
+	$sympa_db_host = false,
+	$sympa_db_name = "sympa",
+	$sympa_db_user = "sympa",
+	$sympa_db_passwd = "sympa",
+	$sympa_fcgi_addr = false,
+	$sympa_fcgi_port = "9000",
+	$sympa_web_location = "/sympa",
+	$sympa_static_web_location = "/static-sympa",
+
+	$lists_listmaster = undef,
+	$lists_url = undef,
+	$lists_dmarc_protection_mode = "reject",
 
 
 	$mailman_remove_dkim = false,
@@ -166,19 +178,46 @@ class mailserver (
 	}
 
 	if $sympa == true {
+		if $sympa_db_host == false {
+			$_sympa_db_host = "$localhost"
+			include '::mysql::server'
+#			class { '::mysql::server': }
+			mysql::db { "$sympa_db_name":
+				user     => "$sympa_db_user",
+				password => "$sympa_db_passwd",
+				host     => "$localhost",
+				grant    => ['ALL'],
+			}
+		} 
+		else {
+			$_sympa_db_host = $sympa_db_host
+		}
+
 		class {"mailserver::install_sympa":
-#			listmaster => $listmaster,
-#			domain => $_myorigin,
 
 		}
 		$sympa_domain = $_myorigin
-		$wwsympa_url = "http://localhost"
+		$sympa_url = $lists_url
+		$sympa_dmarc_protection_mode = $lists_dmarc_protection_mode ? {
+			"reject" => "dmarc_reject",
+			default => "dmarc_accept",
+		}
+
+		$sympa_listmaster = $lists_listmaster
 
 		file {"$sympa_conf":
 			ensure => file,
 			content => template("mailserver/sympa.conf.erb"),
+			require => Class["mailserver::install_sympa"],
+			owner => "sympa",
+		}
+		
+		file {"$sympa_dir":
+			ensure => directory,
+			owner => "sympa",
 			require => Class["mailserver::install_sympa"]
 		}
+
 		file {"$sympa_aliases":
 			ensure => file,
 			content => template("mailserver/sympa_aliases.erb"),
@@ -191,7 +230,92 @@ class mailserver (
 			require => Class["mailserver::install_sympa"]
 		}
 
+		service {"$sympa_service":
+			ensure => "running",
+			require => [Class["mailserver::install_sympa"],File["$sympa_conf"]],
+			subscribe => [Class["mailserver::install_sympa"],File["$sympa_conf"]],
+		}	
 
+		exec {"$postalias_cmd $sympa_sendmail_aliases":
+			refreshonly => true,
+			subscribe => File["$sympa_conf"],
+			require => [File[$sympa_conf],File[$sympa_sendmail_aliases]]
+		}	
+		exec {"$postalias_cmd $sympa_aliases":
+			refreshonly => true,
+			subscribe => File["$sympa_conf"],
+			require => [File[$sympa_conf],File[$sympa_aliases]]
+		}	
+
+
+		if $sympa_db_host == false {
+			exec {"$sympa_health_check":
+				refreshonly => true,
+				subscribe => File["$sympa_conf"],
+				require => Mysql::Db[$sympa_db_name],
+			}
+		}
+		else {
+			exec {"$sympa_health_check":
+				refreshonly => true,
+				subscribe => File["$sympa_conf"],
+			}
+		}
+
+		if $sympa_fcgi_addr == false {
+			$_sympa_fcgi_addr = "127.0.0.1"
+			class {"nginx":
+			}
+
+			nginx::resource::server {"sympa_web":
+				listen_port => 80,
+				ensure => present
+			}
+			nginx::resource::location {"sympa_web_location":
+				ensure => present,	
+				server => "sympa_web",
+				location => "$sympa_web_location",
+				fastcgi=>"unix:$sympa_fcgi_socket",
+				location_cfg_append => {
+#					fastcgi_pass => "unix:$sympa_fcgi_socket",
+					fastcgi_split_path_info => '^(/sympa)(.*)$',
+				},
+				fastcgi_param => {
+					'SCRIPT_FILENAME' => "$sympa_fcgi_program",
+					'PATH_INFO' => '$fastcgi_path_info',
+				}
+			}
+
+			nginx::resource::location {"sympa_static_location":
+				ensure => present,	
+				server => "sympa_web",
+				location => "$sympa_static_web_location",
+				location_cfg_append => {
+					alias => "$sympa_static_dir",
+				}
+			}
+		}
+		else{
+			$_sympa_fcgi_addr = $sympa_fcgi_addr
+		}
+
+		class {"mailserver::install_spawn_fcgi":
+			username => "sympa",
+			groupname => "sympa",
+			app => "$perl",		
+			app_args => "$sympa_fcgi_program",
+			bindsocket => "$sympa_fcgi_socket",
+			bindsocket_mode => "0600 -U www",
+			bindaddr => $_sympa_fcgi_addr,
+			bindport => $sympa_fcgi_port,
+
+		}
+
+		service {"$spawn_fcgi_service":
+			ensure => "running",
+			require => Class["mailserver::install_spawn_fcgi"],
+			subscribe => [Class["mailserver::install_spawn_fcgi"],File[$sympa_conf]],
+		}
 
 
 	}

@@ -11,10 +11,22 @@ inherits mailserver::params
 
         case $::osfamily {
                 'FreeBSD':{
-			$packages = ["sympa","p5-DBD-mysql"]
+			$packages = ["p5-DBD-mysql","p5-CGI-Fast"]
+
 			package {$packages:
-				ensure => "installed",
+				ensure => installed	
 			}
+
+			package {"sympa":
+				ensure => "installed",
+				provider => "portsng",
+				package_settings => {
+					'APACHE' => false,
+					'FASTCGI' => true,
+				},
+				require => Package["portupgrade"],
+			}
+			
 			
 
 		}
