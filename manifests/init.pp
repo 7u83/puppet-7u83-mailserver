@@ -44,7 +44,7 @@
 class mailserver (
 	$localhost = "127.0.0.1",
 
-	$ldap = true,
+	$ldap = false,
 	$ldap_auth_bind="no",
 	$ldap_base="",
 	$ldap_pass_filter="(&(objectClass=posixAccount)(uid=%u))",
@@ -63,7 +63,7 @@ class mailserver (
 	$mail_location = "mbox",
 
 	$myhostname ,
-	$mydestination = [],
+	$mydestination = undef,
 	$myorigin = undef,
 	$mynetworks = ["127.0.0.1/32"],
 
@@ -72,7 +72,6 @@ class mailserver (
 	$solr = false,
 	$lucene=false,
 
-	$dovecot_protocols = "",
 	$dovecot_listen = "*",
 	
 	$imap = true,
@@ -80,34 +79,40 @@ class mailserver (
 	$impas = true,
 	$smtp = true,
 	
-	$disable_plaintext_auth = true,
+#	$disable_plaintext_auth = true,
 
 
 	$auth_system = true,
 
-	$smtpd_hostname = undef,
-	$smtpd_sslcert = undef,
-	$smtpd_sslkey = undef,
+	#
+	# SSL 
+	#
+	$smtp_hostname = undef,
+	$smtp_sslcert = undef,
+	$smtp_sslkey = undef,
+
+	$submission_hostname = undef,
+	$submission_sslcert = undef,
+	$submission_sslkey = undef,
 
 	$imap_hostname = undef,
 	$imap_sslcert = undef,
 	$imap_sslkey = undef,
 
-
-
 	$sslcert_src = "puppet:///ssl",	
 
-
+	# 
+	# DKIM params
+	#
 	$dkim_selector = undef,
 	$dkim_domains = undef,
 	$dkim_source = "puppet:///dkim",
 
-	$mailman3 = false,
-	$mailman = false,
 
 
-	
-	$sympa = false,
+	#
+	# Sympa parameters
+	#
 	$sympa_db_host = false,
 	$sympa_db_name = "sympa",
 	$sympa_db_user = "sympa",
@@ -122,22 +127,264 @@ class mailserver (
 	$lists_dmarc_protection_mode = "reject",
 
 
-	$mailman_remove_dkim = false,
-
-
 	$mailbox_size_limit = 0,
 
 
 
 	$virtual_mailbox_domains = [],
 	$virtual_mailbox_base = "/",
+	
 
-	$submission = true,
+	$services = ["smtp"],
+
+	$tls_security = "encrypt",
+
+
+
+	#
+	# SMTP parameters + defaults
+	#
 	$submission_verify_recipient = false,
+	$smtp_rbls = [],
+	$smtp_client_restrictions = [
+		"permit_mynetworks",
+		"reject_unknown_reverse_client_hostname",
+		"reject_unauth_pipelining"
+	],
+	$smtp_recipient_restrictions = [
+		"permit_mynetworks",
+		"reject_unauth_destination"
+	],
+	$smtp_helo_restrictions = [
+		"permit_mynetworks",
+		"reject_invalid_hostname",
+		"reject_unknown_hostname",
+		"reject_non_fqdn_hostname",
+	],
+	$smtp_relay_restrictions = [
+		"permit_mynetworks",
+		"defer_unauth_destination"
+	],
+	$smtp_milters = [],
+	$smtp_postscreen = false,
+	$smtp_postscreen_rbls = undef,
+
+
+
+	#
+	# Submission parameters + defaults
+	#
+
+	$submission_rbls = [],
+	$submission_client_restrictions = [
+		"permit_sasl_authenticated",
+		"reject"
+	],
+	$submission_recipient_restrictions = [
+		"reject_unknown_recipient_domain",
+		"permit_sasl_authenticated",
+		"reject",
+	],
+	$submission_helo_restrictions = [
+		"permit_sasl_authenticated",
+		"reject",
+	],
+	$submission_relay_restrictions = [
+		"permit_sasl_authenticated",
+		"reject",
+	],
+	$submission_sender_restrictions = [
+		"reject_authenticated_sender_login_mismatch",
+		"permit_sasl_authenticated",
+		"reject",
+	],
+
+	$submission_milters = [],
+	$submission_mynetworks = [],
+
 
 
 
 ) inherits mailserver::params {
+
+
+	# ----------------------------------------------------------------
+	# Basic setup
+	#
+
+	$_myorigin = $myorigin ? {
+		undef => $myhostname,
+		default => $myorigin,
+	}
+
+	$_mydestination = $mydestination ? {
+		undef => $_myorigin,
+		default => join($mydestination," ")
+	}
+
+	$_imap_hostname = $imap_hostname ? {
+		undef => $myhostname,
+		default => $imap_hostname,
+	}
+
+	$_smtp_hostname = $smtp_hostname ? {
+		undef => $myhostname,
+		default => $smtp_hostname,
+	}
+
+	$_submission_hostname = $submission_hostname ? {
+		undef => $myhostname,
+		default => $submission_hostname,
+	}
+
+
+	$_mynetworks = join($mynetworks," ")
+
+
+	$dovecot_services = intersection (["imap","pop3","imaps","pop3s","sieve"],$services)
+
+
+	if $smtp_postscreen { 
+		if $smtp_postscreen_rbls == undef {
+			$_postscreen_rbls = join ( $smtp_rbls , " ") 
+		}
+		else {
+			$_postscreen_rbls = $smtp_postscreen_rbls
+		}
+	}
+	else{
+		$_postscreen_rbls = undef
+	}
+	
+
+
+	# ----------------------------------------------------------------
+	# Virtual setup
+	#
+
+	
+	$_virtual_mailbox_domains = join($virtual_mailbox_domains," ")
+
+	if $virtual_mailbox_domains != [] {
+		user {"$vmail_user":
+			ensure => present,
+			uid => "400",
+		}
+
+		group {"$vmail_group":
+			ensure => present,
+			gid => "400",
+		}
+	}
+
+
+
+
+
+	# ----------------------------------------------------------------
+	# SSL setup
+	#
+	
+	if $imap_sslcert == undef {
+		$_imap_sslcert  = "$ssldir/$_imap_hostname/fullchain.pem"
+		$imap_sslcert_src = $sslcert_src
+	}
+	else {
+		$_imap_sslcert  = $imap_sslcert
+		$imap_sslcert_src = undef
+	}
+	
+	if $imap_sslkey == undef {
+		$_imap_sslkey  = "$ssldir/$_imap_hostname/privkey.pem"
+		$imap_sslkey_src = $sslcert_src
+	}
+	else {
+		$_imap_sslcert  = $imap_sslcert
+		$imap_sslkey_src = undef
+	}
+	
+	if $imap_sslcert_src != undef {
+		ensure_resource ("mailserver::copyfile","fullchain.pem",{
+			path => "$ssldir/$_imap_hostname",
+			source => "$imap_sslcert_src/$_imap_hostname",
+		})
+	}
+	if $imap_sslkey_src != undef {
+		ensure_resource ("mailserver::copyfile","privkey.pem",{
+			path => "$ssldir/$_imap_hostname",
+			source => "$imap_sslcert_src/$_imap_hostname",
+		})
+	}
+
+	if $smtpd_sslcert == undef {
+		$_smtpd_sslcert  = "$ssldir/$_smtp_hostname/fullchain.pem"
+		$smtpd_sslcert_src = $sslcert_src
+	}
+	else {
+		$_smtpd_sslcert  = $smtpd_sslcert
+		$smtpd_sslcert_src = undef
+	}
+	
+	if $smtpd_sslkey == undef {
+		$_smtpd_sslkey  = "$ssldir/$_smtp_hostname/privkey.pem"
+		$smtpd_sslkey_src = $sslcert_src
+	}
+	else {
+		$_smtpd_sslcert  = $smtpd_sslcert
+		$smtpd_sslkey_src = undef
+	}
+	
+	if $smtpd_sslcert_src != undef {
+		ensure_resource("mailserver::copyfile","fullchain.pem",{
+			path => "$ssldir/$_smtp_hostname",
+			source => "$smtpd_sslcert_src/$_smtp_hostname",
+		})
+	}
+	if $smtpd_sslkey_src != undef {
+		ensure_resource ("mailserver::copyfile", "privkey.pem",{
+			path => "$ssldir/$_smtp_hostname",
+			source => "$smtpd_sslcert_src/$_smtp_hostname",
+		})
+	}
+
+
+
+	# ----------------------------------------------------------------
+	# DKIM Setup
+	#
+
+	if $dkim_selector != undef {
+		ensure_resource ("class","mailserver::install_postfix",{
+			ldap  => $ldap
+		})
+		if $dkim_domains == undef {
+			$_dkim_domains = $myorigin
+		}
+		else {
+			$_dkim_domains = $dkim_domains
+		}
+
+		class {"mailserver::install_opendkim":
+			selector => $dkim_selector,
+			domains => $_dkim_domains,
+
+			dkim_source => $dkim_source,
+			mynetworks => $mynetworks
+		}
+		service {"$opendkim_service":
+			ensure => "running",
+			subscribe => Class["mailserver::install_opendkim"],
+			require => Class["mailserver::install_postfix"],
+		}
+
+	}
+
+
+	# ----------------------------------------------------------------
+	# SMTP Server
+	#
+
+
 
 	if $ldap_lmtp_user_filter != undef {
 		$_ldap_lmtp_user_filter = $ldap_lmtp_user_filter
@@ -147,37 +394,76 @@ class mailserver (
 	}
 
 
-	$pfmydestination = join($mydestination," ")
-	$pfmynetworks = join($mynetworks," ")
+
+
+
+
 	if $ldap {
 		$_virtual_mailbox_maps = "ldap:$postfix_dir/ldap_login_maps.cf"
 	}
 
 
 
-	$_virtual_mailbox_domains = join($virtual_mailbox_domains," ")
 
 
-	if $mailman3 == true {
+
+	# ----------------------------------------------------------------
+	# SMTP Server
+	#
+
+	if "smtp" in $services {
 		ensure_resource ("class","mailserver::install_postfix",{
 			ldap  => $ldap
 		})
-		Class["mailserver::install_mailman3"] -> Class["mailserver::mailman_service"] 
 
-		class {"mailserver::install_mailman3":
-			remove_dkim => $mailman_remove_dkim
+		class {"mailserver::mx":
+			rbls => $smtp_rbls,
+			client_restrictions => $smtp_client_restrictions,
+			recipient_restrictions => $smtp_recipient_restrictions,
+			helo_restrictions =>  $smtp_helo_restrictions ,
+			relay_restrictions => 	$smtp_relay_restrictions,
+			milters => $smtp_milters,
+			postscreen => $smtp_postscreen,
 		}
-		class {"mailserver::mailman_service":}
-		$mailman_local_maps = "hash:$mailman_vardir/data/postfix_lmtp"
-	}
-	
-
-	$_myorigin = $myorigin ? {
-		undef => $myhostname,
-		default => $myorigin,
 	}
 
-	if $sympa == true {
+
+	# ----------------------------------------------------------------
+	# Suubmission Server
+	#
+	if "submission" in $services {	
+		ensure_resource ("class","mailserver::install_postfix",{
+			ldap  => $ldap
+		})
+		if $ldap {
+			$sender_login_maps = [
+				"ldap:$postfix_dir/ldap_login_maps.cf"
+			]
+		}
+		class {"mailserver::submission":
+			sender_login_maps => $sender_login_maps,
+			verify_recipient => $submission_verify_recipient,
+			rbls => $submission_rbls,
+			client_restrictions => $submission_client_restrictions,
+			recipient_restrictions => $submission_recipient_restrictions,
+			helo_restrictions => $submission_helo_restrictions,
+			relay_restrictions => $submission_relay_restrictions,
+			sender_restrictions => $submission_sender_restrictions,
+			milters => $submission_milter,
+		}
+	}
+
+
+
+
+
+	# ----------------------------------------------------------------
+	# Sympa 
+	#
+
+	if "sympa" in $services {
+		$sympa = true
+
 		if $sympa_db_host == false {
 			$_sympa_db_host = "$localhost"
 			include '::mysql::server'
@@ -193,9 +479,9 @@ class mailserver (
 			$_sympa_db_host = $sympa_db_host
 		}
 
-		class {"mailserver::install_sympa":
+		class {"mailserver::install_sympa":}
 
-		}
+
 		$sympa_domain = $_myorigin
 		$sympa_url = $lists_url
 		$sympa_dmarc_protection_mode = $lists_dmarc_protection_mode ? {
@@ -277,7 +563,6 @@ class mailserver (
 				location => "$sympa_web_location",
 				fastcgi=>"unix:$sympa_fcgi_socket",
 				location_cfg_append => {
-#					fastcgi_pass => "unix:$sympa_fcgi_socket",
 					fastcgi_split_path_info => '^(/sympa)(.*)$',
 				},
 				fastcgi_param => {
@@ -321,119 +606,8 @@ class mailserver (
 	}
 
 
-	user {"$vmail_user":
-		ensure => present,
-		uid => "400",
-	}
-
-	group {"$vmail_group":
-		ensure => present,
-		gid => "400",
-	}
 
 
-
-	if $dkim_selector != undef {
-		ensure_resource ("class","mailserver::install_postfix",{
-			ldap  => $ldap
-		})
-		if $dkim_domains == undef {
-			$_dkim_domains = $myorigin
-		}
-		else {
-			$_dkim_domains = $dkim_domains
-		}
-
-		class {"mailserver::install_opendkim":
-			selector => $dkim_selector,
-			domains => $_dkim_domains,
-
-			dkim_source => $dkim_source,
-			mynetworks => $mynetworks
-		}
-		service {"$opendkim_service":
-			ensure => "running",
-			subscribe => Class["mailserver::install_opendkim"]
-		}
-
-	}
-
-
-
-	$_imap_hostname = $imap_hostname ? {
-		undef => $myhostname,
-		default => $imap_hostname,
-	}
-
-	if $imap_sslcert == undef {
-		$_imap_sslcert  = "$ssldir/$_imap_hostname/fullchain.pem"
-		$imap_sslcert_src = $sslcert_src
-	}
-	else {
-		$_imap_sslcert  = $imap_sslcert
-		$imap_sslcert_src = undef
-	}
-	
-	if $imap_sslkey == undef {
-		$_imap_sslkey  = "$ssldir/$_imap_hostname/privkey.pem"
-		$imap_sslkey_src = $sslcert_src
-	}
-	else {
-		$_imap_sslcert  = $imap_sslcert
-		$imap_sslkey_src = undef
-	}
-	
-	if $imap_sslcert_src != undef {
-		ensure_resource ("mailserver::copyfile","fullchain.pem",{
-			path => "$ssldir/$_imap_hostname",
-			source => "$imap_sslcert_src/$_imap_hostname",
-		})
-	}
-	if $imap_sslkey_src != undef {
-		ensure_resource ("mailserver::copyfile","privkey.pem",{
-			path => "$ssldir/$_imap_hostname",
-			source => "$imap_sslcert_src/$_imap_hostname",
-		})
-	}
-
-
-
-
-	$_smtpd_hostname = $smtpd_hostname ? {
-		undef => $myhostname,
-		default => $smtpd_hostname,
-	}
-
-	if $smtpd_sslcert == undef {
-		$_smtpd_sslcert  = "$ssldir/$_smtpd_hostname/fullchain.pem"
-		$smtpd_sslcert_src = $sslcert_src
-	}
-	else {
-		$_smtpd_sslcert  = $smtpd_sslcert
-		$smtpd_sslcert_src = undef
-	}
-	
-	if $smtpd_sslkey == undef {
-		$_smtpd_sslkey  = "$ssldir/$_smtpd_hostname/privkey.pem"
-		$smtpd_sslkey_src = $sslcert_src
-	}
-	else {
-		$_smtpd_sslcert  = $smtpd_sslcert
-		$smtpd_sslkey_src = undef
-	}
-	
-	if $smtpd_sslcert_src != undef {
-		ensure_resource("mailserver::copyfile","fullchain.pem",{
-			path => "$ssldir/$_smtpd_hostname",
-			source => "$smtpd_sslcert_src/$_smtpd_hostname",
-		})
-	}
-	if $smtpd_sslkey_src != undef {
-		ensure_resource ("mailserver::copyfile", "privkey.pem",{
-			path => "$ssldir/$_smtpd_hostname",
-			source => "$smtpd_sslcert_src/$_smtpd_hostname",
-		})
-	}
 
 
 #	notify {"$_smtpd_sslkey":}
@@ -489,10 +663,9 @@ class mailserver (
 
 		solr=>$solr,
 		lucene => $lucene,
-		protocols => $dovecot_protocols,
 		listen => $dovecot_listen, 
 		mail_location => $dovecot_mail_location,
-		disable_plaintext_auth => $disable_plaintext_auth,
+		disable_plaintext_auth => $tls_security == "encrypt", #$disable_plaintext_auth,
 
 		auth_system => $auth_system,
 
@@ -505,7 +678,7 @@ class mailserver (
 #		vmail_user => $vmail_user,
 #		vmail_group = $vmail_group,
 
-
+		protocols => join($dovecot_services," ")
 	}
 
 	file { "$clamav_milter_conf":
@@ -595,20 +768,6 @@ class mailserver (
 #	mailserver::install_sslcert {"$myhostname":
 #		owner => postfix
 #	}
-
-
-	if $submission {	
-		if $ldap {
-			$sender_login_maps = [
-				"ldap:$postfix_dir/ldap_login_maps.cf"
-			]
-		}
-		class {"mailserver::submission":
-			hostname => $myhostname,
-			sender_login_maps => $sender_login_maps,
-			verify_recipient => $submission_verify_recipient,
-		}
-	}
 
 
 
@@ -713,7 +872,6 @@ result_attribute=$result_attribute
 
 
 class mailserver::mx(
-	$hostname,
 	$rbls = [],
 
 	$client_restrictions = [
@@ -763,7 +921,7 @@ class mailserver::mx(
 
 
 	if $postscreen {
-		mailserver::service{ "Postscrren server for $hostname":
+		mailserver::service{ "Postscreen":
 			service => 'smtp',
 			command => 'postscreen',
 			maxproc => 1,
@@ -784,7 +942,7 @@ class mailserver::mx(
 	}
 	
 
-	mailserver::service{ "MX server for $hostname":
+	mailserver::service{ "Postfix SMTP Server":
 		service => $service,
 		command => 'smtpd',
 		type => $type,
@@ -801,20 +959,20 @@ class mailserver::mx(
 
 	}
 
-	mailserver::service{ "Dovecot for $hostname":
-		service => dovecot,
-		type => "unix",
-		private =>'-',
-		unpriv => 'n',
-		chroot => 'n',
-		wakeup => '-',	
-		maxproc => '-',
-		command => "pipe",
-		args => [
-			"flags=DRhu user=vmail:vmail argv=$dovecot_lda -f \${sender} -d \${recipient}",
-		]
-
-	}
+#	mailserver::service{ "Dovecot for $hostname":
+#		service => dovecot,
+#		type => "unix",
+#		private =>'-',
+#		unpriv => 'n',
+#		chroot => 'n',
+#		wakeup => '-',	
+#		maxproc => '-',
+#		command => "pipe",
+#		args => [
+#			"flags=DRhu user=vmail:vmail argv=$dovecot_lda -f \${sender} -d \${recipient}",
+#		]
+#
+#	}
 
 
 }
@@ -824,7 +982,6 @@ class mailserver::mx(
 
 
 class mailserver::submission(
-	$hostname,
 	$rbls = [],
 
 	$client_restrictions = [
@@ -850,6 +1007,7 @@ class mailserver::submission(
 		"reject",
 	],
 
+	$tls_security = 'encrypt',
 
 	$milters = [],
 
@@ -857,7 +1015,6 @@ class mailserver::submission(
 
 	$ldap_login_map =[],
 
-	$tls_security = 'encrypt',
 
 	$verify_recipient = false,
 
@@ -896,15 +1053,20 @@ class mailserver::submission(
 
 	$kf = $::mailserver::_smtpd_sslkey
 
-	$ssl_options ="{ -o smtpd_tls_security_level = $tls_security }
+	if $tls_security != false {
+		$ssl_options ="{ -o smtpd_tls_security_level = $tls_security }
 	{ -o smtp_tls_note_starttls_offer = yes }
 	{ -o smtpd_tls_key_file = $kf }
 	{ -o smtpd_tls_cert_file = $::mailserver::_smtpd_sslcert }
 	{ -o smtpd_tls_loglevel = 1 }
 	{ -o smtpd_tls_received_header = yes }
 	{ -o smtpd_tls_session_cache_timeout = 3600s }"
+	}
+	else{
+		$ssl_options = ""
+	}
 
-	mailserver::service{ "Subimission server for $hostname":
+	mailserver::service{ "Postfix Subimission":
 		service => 'submission',
 		command => 'smtpd',
 		args => [
@@ -922,3 +1084,32 @@ class mailserver::submission(
 		]
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#	if $mailman3 == true {
+#		ensure_resource ("class","mailserver::install_postfix",{
+#			ldap  => $ldap
+#		})
+#		Class["mailserver::install_mailman3"] -> Class["mailserver::mailman_service"] 
+#
+#		class {"mailserver::install_mailman3":
+#			remove_dkim => $mailman_remove_dkim
+#		}
+#		class {"mailserver::mailman_service":}
+#		$mailman_local_maps = "hash:$mailman_vardir/data/postfix_lmtp"
+#	}
+	
+
+

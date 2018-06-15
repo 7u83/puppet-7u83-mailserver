@@ -68,7 +68,7 @@ class mailserver::params {
 			$sympa_sendmail_aliases ="/usr/local/etc/sympa/sympa_sendmail_aliases"
 			$sympa_libexec_dir="/usr/local/libexec/sympa"
 			$sympa_static_dir="/usr/local/share/sympa/static"
-			$sympa_health_check="/usr/local/bin/sympa.pl --health_check"
+			$sympa_health_check="/usr/sbin/chown -R sympa /usr/local/share/sympa && /usr/local/bin/sympa.pl --health_check"
 			$sympa_service="sympa"
 			$sympa_fcgi_program="/usr/local/libexec/sympa/wwsympa.fcgi"
 			$sympa_fcgi_socket="/var/run/wwsympa.socket"

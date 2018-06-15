@@ -189,7 +189,7 @@ myorigin = <%= @_myorigin %>
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain,
 #	mail.$mydomain, www.$mydomain, ftp.$mydomain
-mydestination = <%= @pfmydestination %>
+mydestination = <%= @_mydestination %>
 
 # REJECTING MAIL FOR UNKNOWN LOCAL USERS
 #
@@ -290,7 +290,7 @@ mynetworks_style = host
 #mynetworks = $config_directory/mynetworks
 #mynetworks = hash:$config_directory/network_table
 #
-mynetworks = <%= @pfmynetworks %>
+mynetworks = <%= @_mynetworks %>
 
 # The relay_domains parameter restricts what destinations this system will
 # relay mail to.  See the smtpd_recipient_restrictions description in
@@ -736,3 +736,6 @@ local_recipient_maps = proxy:unix:passwd.byname $alias_maps <%= @mailman_local_m
 #address_verify_default_transport = direct_smtp
 #address_verify_relayhost = 192.168.1.125
 
+<% if @_postscreen_rbls %>
+postscreen_dnsbl_sites = <%= @postscreen_rbls %>
+<% end %>
