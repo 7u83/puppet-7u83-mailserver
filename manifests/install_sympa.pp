@@ -11,7 +11,7 @@ inherits mailserver::params
 
         case $::osfamily {
                 'FreeBSD':{
-			$packages = ["p5-DBD-mysql","p5-CGI-Fast"]
+			$packages = ["p5-DBD-mysql","p5-CGI-Fast","mhonarc"]
 
 			package {$packages:
 				ensure => installed	

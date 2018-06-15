@@ -73,6 +73,7 @@ class mailserver::params {
 			$sympa_fcgi_program="/usr/local/libexec/sympa/wwsympa.fcgi"
 			$sympa_fcgi_socket="/var/run/wwsympa.socket"
 			
+			$mhonarc_cmd = "/usr/local/bin/mhonarc"
 			
 			$perl = "/usr/local/bin/perl"
 			$spawn_fcgi_service = "spawn-fcgi"
