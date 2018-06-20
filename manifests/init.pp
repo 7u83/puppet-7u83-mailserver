@@ -1,7 +1,8 @@
 # Class: mailserver
 # ===========================
 #
-# Full description of class mailserver here.
+# Install a mail server using Postfix, Dovecot, Clamav, Opendkim, 
+# and extras like Sympa, Rspamd, Sieve and more 
 #
 # Parameters
 # ----------
@@ -28,18 +29,18 @@
 #
 # @example
 #    class { 'mailserver':
-#      servers => [ 'pool.ntp.org', 'ntp.local.company.com' ],
+#      services => [ 'imap', 'submission' ],
 #    }
 #
 # Authors
 # -------
 #
-# Author Name <author@domain.com>
+# 7u83 <7u83@mail.ru>
 #
 # Copyright
 # ---------
 #
-# Copyright 2018 Your name here, unless otherwise noted.
+# Copyright 2018 7u83.
 #
 class mailserver (
 	$localhost = "127.0.0.1",
@@ -47,14 +48,21 @@ class mailserver (
 	$ldap = false,
 	$ldap_auth_bind="no",
 	$ldap_base="",
+
 	$ldap_pass_filter="(&(objectClass=posixAccount)(uid=%u))",
 	$ldap_user_filter="(&(objectClass=posixAccount)(uid=%u))",
+
+
 	$ldap_lmtp_user_filter=undef,
 	$ldap_login_maps_query=undef,
 	$ldap_login_maps_result_attribute=undef,
 	$ldap_hosts = [],
 	$ldap_dn = undef,
 	$ldap_pass = undef,
+
+	$ldap_uid_attrib = "uid",
+	$ldap_homedir_attrib = "homeDirectory",
+
 
 	$vmail_user="vmail", 
 	$vmail_group="vmail",
@@ -153,7 +161,9 @@ class mailserver (
 	],
 	$smtp_recipient_restrictions = [
 		"permit_mynetworks",
-		"reject_unauth_destination"
+		"reject_unlisted_recipient",
+		"reject_unauth_destination",
+		"reject_unknown_recipient_domain",
 	],
 	$smtp_helo_restrictions = [
 		"permit_mynetworks",
@@ -241,7 +251,7 @@ class mailserver (
 	$_mynetworks = join($mynetworks," ")
 
 
-	$dovecot_services = intersection (["imap","pop3","imaps","pop3s","sieve"],$services)
+	$dovecot_services = concat ( intersection (["imap","pop3","imaps","pop3s","sieve"],$services), "lmtp" )
 
 
 	if $smtp_postscreen { 

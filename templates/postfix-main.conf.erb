@@ -482,7 +482,7 @@ alias_database = <%= @alias_database %>
 #mailbox_command = /some/where/procmail
 #mailbox_command = /some/where/procmail -a "$EXTENSION"
 
-mailbox_command = <%= @dovecot_deliver %>
+#mailbox_command = <%= @dovecot_deliver %>
 
 # The mailbox_transport specifies the optional transport in master.cf
 # to use after processing aliases and .forward files. This parameter
@@ -737,5 +737,5 @@ local_recipient_maps = proxy:unix:passwd.byname $alias_maps <%= @mailman_local_m
 #address_verify_relayhost = 192.168.1.125
 
 <% if @_postscreen_rbls %>
-postscreen_dnsbl_sites = <%= @postscreen_rbls %>
+postscreen_dnsbl_sites = <%= @_postscreen_rbls %>
 <% end %>
