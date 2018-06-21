@@ -27,7 +27,8 @@ class mailserver::install_dovecot(
 	$virtual_mailbox_base,
 	$ldap_login_maps_result_attribute,
 
-
+	$managesieve,
+	$sieve,
 
 ) inherits mailserver::params {
 	$dovecot_ldap_hosts = join($ldap_hosts," ")
@@ -35,7 +36,7 @@ class mailserver::install_dovecot(
         case $::osfamily {
                 'FreeBSD':{
 
-			package {"dovecot":
+			package {"mail/dovecot":
 				provider => "portsng",
 				ensure => 'latest',
 				package_settings => {
@@ -44,6 +45,18 @@ class mailserver::install_dovecot(
 					'LUCENE' => $lucene
 				},
 				require => Package["portupgrade"]
+			}
+
+			if $sieve {
+				package {"mail/dovecot-pigeonhole":
+#					provider => "portsng",
+					ensure => 'latest',
+#					package_settings => {
+#						'LDAP' => $ldap,
+			#			'MANAGESIEVE' => $managesieve,
+#					},
+#					require => Package["portupgrade"]
+				}
 			}
 		}
 		default: {

@@ -87,8 +87,6 @@ class mailserver (
 	$impas = true,
 	$smtp = true,
 	
-#	$disable_plaintext_auth = true,
-
 
 	$auth_system = true,
 
@@ -251,7 +249,7 @@ class mailserver (
 	$_mynetworks = join($mynetworks," ")
 
 
-	$dovecot_services = concat ( intersection (["imap","pop3","imaps","pop3s","sieve"],$services), "lmtp" )
+	$dovecot_services = concat ( intersection (["imap","pop3","imaps","pop3s","managesieve"],$services), "lmtp" )
 
 
 	if $smtp_postscreen { 
@@ -688,7 +686,9 @@ class mailserver (
 #		vmail_user => $vmail_user,
 #		vmail_group = $vmail_group,
 
-		protocols => join($dovecot_services," ")
+		protocols => join($dovecot_services," "),
+		managesieve => 'managesieve' in $services,
+		sieve => 'sieve' in $services, 
 	}
 
 	file { "$clamav_milter_conf":
