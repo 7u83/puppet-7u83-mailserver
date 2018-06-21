@@ -140,7 +140,7 @@ class mailserver (
 
 
 	$virtual_mailbox_domains = [],
-	$virtual_mailbox_base = "/",
+	$virtual_mailbox_base = "/mail",
 	
 
 	$services = ["smtp"],
@@ -284,6 +284,12 @@ class mailserver (
 		group {"$vmail_group":
 			ensure => present,
 			gid => "400",
+		}
+
+		file {"$virtual_mailbox_base":
+			ensure => directory,
+			owner => "$vmail_user",
+			require => User["$vmail_user"],
 		}
 	}
 
