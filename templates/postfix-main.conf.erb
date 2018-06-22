@@ -482,7 +482,9 @@ alias_database = <%= @alias_database %>
 #mailbox_command = /some/where/procmail
 #mailbox_command = /some/where/procmail -a "$EXTENSION"
 
-#mailbox_command = <%= @dovecot_deliver %>
+<% if @mailbox_command %>
+mailbox_command = <%= @mailbox_command %>
+<% end %>
 
 # The mailbox_transport specifies the optional transport in master.cf
 # to use after processing aliases and .forward files. This parameter

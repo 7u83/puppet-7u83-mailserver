@@ -5,6 +5,7 @@
 # Address to use when sending rejection mails.
 # Default is postmaster@%d. %d expands to recipient domain.
 #postmaster_address =
+postmaster_address = <%= @dovecot_postmaster_address %>
 
 # Hostname to use in various parts of sent mails (e.g. in Message-Id) and
 # in LMTP replies. Default is the system's real hostname@domain.
@@ -26,7 +27,7 @@
 
 # Human readable error message for rejection mails. You can use variables:
 #  %n = CRLF, %r = reason, %s = original subject, %t = recipient
-#rejection_reason = Your message to <%t> was automatically rejected:%n%r
+#rejection_reason = Your message to <\%t> was automatically rejected:%n%r
 
 # Delimiter character between local-part and detail in email address.
 #recipient_delimiter = +
@@ -45,4 +46,7 @@
 protocol lda {
   # Space separated list of plugins to load (default is global mail_plugins).
   #mail_plugins = $mail_plugins
+<%- if @lda_mail_plugins -%>
+  mail_plugins = <%= @lda_mail_plugins %>
+<%- end-%>
 }

@@ -43,7 +43,17 @@
 # Copyright 2018 7u83.
 #
 class mailserver (
+	#
+	# general
+	#
+	$myhostname,
+
+
 	$localhost = "127.0.0.1",
+
+
+
+
 
 	$ldap = false,
 	$ldap_auth_bind="no",
@@ -70,7 +80,6 @@ class mailserver (
 
 	$mail_location = "mbox",
 
-	$myhostname ,
 	$mydestination = undef,
 	$myorigin = undef,
 	$mynetworks = ["127.0.0.1/32"],
@@ -249,8 +258,10 @@ class mailserver (
 	$_mynetworks = join($mynetworks," ")
 
 
-	$dovecot_services = concat ( intersection (["imap","pop3","imaps","pop3s","managesieve"],$services), "lmtp" )
-
+	$dovecot_services = concat ( intersection (["imap","pop3","imaps","pop3s","sieve" ],$services), "lmtp" )
+	if "sieve" in $dovecot_services {
+		$mailbox_command = $dovecot_deliver
+	}
 
 	if $smtp_postscreen { 
 		if $smtp_postscreen_rbls == undef {
@@ -692,9 +703,7 @@ class mailserver (
 #		vmail_user => $vmail_user,
 #		vmail_group = $vmail_group,
 
-		protocols => join($dovecot_services," "),
-		managesieve => 'managesieve' in $services,
-		sieve => 'sieve' in $services, 
+		protocols => $dovecot_services,
 	}
 
 	file { "$clamav_milter_conf":
