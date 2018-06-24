@@ -125,9 +125,10 @@ auth_mechanisms = login plain
 
 #!include auth-deny.conf.ext
 #!include auth-master.conf.ext
-<%- if @auth_system -%>
+<% if @local_userdb.include?("passwd") %>
 !include auth-system.conf.ext
 <%- end -%>
+
 #!include auth-sql.conf.ext
 <%- if @ldap -%>
 !include auth-ldap.conf.ext

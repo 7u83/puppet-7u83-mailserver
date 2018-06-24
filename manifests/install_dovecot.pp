@@ -28,7 +28,8 @@ class mailserver::install_dovecot(
 	$ldap_login_maps_result_attribute,
 
 
-	$lda_sieve = false
+	$lda_sieve = false,
+	$local_userdb,
 
 ) inherits mailserver::params {
 	$dovecot_ldap_hosts = join($ldap_hosts," ")

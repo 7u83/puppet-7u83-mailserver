@@ -730,7 +730,17 @@ unknown_local_recipient_reject_code = 550
 owner_request_special = no
 transport_maps = <%= @mailman_local_maps %>
 #address_verify_transport_maps = <%= @mailman_local_maps %>
-local_recipient_maps = proxy:unix:passwd.byname $alias_maps <%= @mailman_local_maps %>
+#
+<%-
+	@lmaps = ""
+	if @local_userdb.include?("passwd")
+		@lmaps = "proxy:unix:passwd.byname"	
+	end 
+	@lmaps = @lmaps + ' $alias_maps'
+-%>
+
+local_recipient_maps = <%= @lmaps %> 
+#proxy:unix:passwd.byname $alias_maps <%= @mailman_local_maps %>
 
 # hash:/var/mailman/data/postfix_lmtp
 #relay_domains =

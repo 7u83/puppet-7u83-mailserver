@@ -47,12 +47,19 @@ class mailserver (
 	# general
 	#
 	$myhostname,
+	$mydestination = undef,
+	$myorigin = undef,
 
 
 	$localhost = "127.0.0.1",
+	$mynetworks = ["127.0.0.1/32"],
+
+	$local_userdb = ["passwd"],
 
 
-
+	#
+	# LDAP
+	#
 
 
 	$ldap = false,
@@ -80,12 +87,13 @@ class mailserver (
 
 	$mail_location = "mbox",
 
-	$mydestination = undef,
-	$myorigin = undef,
-	$mynetworks = ["127.0.0.1/32"],
 
-
+	#
+	# ClamAV
+	#
 	$clamav_infected_action = "Reject",
+
+
 	$solr = false,
 	$lucene=false,
 
@@ -145,12 +153,18 @@ class mailserver (
 	$mailbox_size_limit = 0,
 
 
+	$virtual_userdb = [],
 
 	$virtual_mailbox_domains = [],
 	$virtual_mailbox_base = "/mail",
+	$virtual_alias_maps = [],
+	$virtual_mailbox_maps = [],
+	$virtual_maps_src = undef,
+	$virtual_maps_dir = undef,
+
 	
 
-	$services = ["smtp"],
+	$services = ["smtp","submission","imap"],
 
 	$tls_security = "encrypt",
 
@@ -419,7 +433,16 @@ class mailserver (
 	}
 
 
-
+	if "passwd" in $local_userdb {
+		$passwd_login_maps = "$postfix_dir/passwd_login_maps.cf"
+		file { "$passwd_login_maps":
+			ensure => present,
+			content => '/^(.*?):\*/     $1',
+			require => Class["mailserver::install_postfix"],
+			notify => Service["$postfix_service"],
+		}
+		$sender_passwd_login_maps = 'pipemap:{proxy:unix:passwd.byname,pcre:/usr/local/etc/postfix/passwd_login_maps.cf}'
+	}
 
 
 
@@ -465,8 +488,11 @@ class mailserver (
 				"ldap:$postfix_dir/ldap_login_maps.cf"
 			]
 		}
+		else {
+			$sender_login_maps = []
+		}
 		class {"mailserver::submission":
-			sender_login_maps => $sender_login_maps,
+			sender_login_maps =>  concat ($sender_login_maps, $sender_passwd_login_maps),
 			verify_recipient => $submission_verify_recipient,
 			rbls => $submission_rbls,
 			client_restrictions => $submission_client_restrictions,
@@ -676,6 +702,8 @@ class mailserver (
 
 
 	class {"mailserver::install_dovecot":
+		local_userdb => $local_userdb,
+
 		ldap=>$ldap,
 		ldap_base => $ldap_base,
 		ldap_pass_filter => $ldap_pass_filter,
@@ -780,6 +808,9 @@ class mailserver (
 		result_attribute => $ldap_login_maps_result_attribute
 			
 	}
+
+
+
 
 
 	service {"$dovecot_service":
@@ -894,6 +925,17 @@ result_attribute=$result_attribute
 "
 	}
 }
+
+
+define mailserver::postfix_hashmap(
+){
+	file {"$title":
+		ensure => present,
+		
+	}
+
+}
+
 
 
 class mailserver::mx(

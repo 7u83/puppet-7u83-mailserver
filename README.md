@@ -14,6 +14,11 @@
 
 ## Description
 
+This module installs and configures an e-mail server with Postfix, Dovecot, 
+ClamAV, Sieve and other options like Sympa as mailing list server. 
+
+Currently there is only FreeBSD supported.
+
 Start with a one- or two-sentence summary of what the module does and/or what
 problem it solves. This is your 30-second elevator pitch for your module.
 Consider including OS/Puppet version it works with.
