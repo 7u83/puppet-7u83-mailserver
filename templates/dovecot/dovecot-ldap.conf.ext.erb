@@ -144,16 +144,22 @@ user_filter = <%= @ldap_user_filter %>
 # string. For example:
 #pass_attrs = uid=user,userPassword=password,\
 #  homeDirectory=userdb_home,uidNumber=userdb_uid,gidNumber=userdb_gid
+#
+
 user_attrs = \
-	=home=<%=@virtual_mailbox_base%>/%{ldap:<%=@ldap_login_maps_result_attribute%>},\
+	=home=<%=@virtual_mailbox_base%>/%{ldap:<%=@ldap_maildir_attribute%>},\
 	=uid=400, \
-	=gid=400 
+	=gid=400, \
+	=mail=maildir:~/<%= @virtual_mailbox_dir %>
 
 
 # Filter for password lookups
 #pass_filter = (&(objectClass=posixAccount)(uid=%u))
-<%- if @ldap_pass_filter -%>
-pass_filter = <%= @ldap_pass_filter %>
+#
+<%- if true  -%>
+#< @dove_ldap_login_search = regsubst(@ldap_login_search, '%s','%u') >
+<% @dove_ldap_login_search = @ldap_login_search.gsub('%s','%u') %>
+pass_filter = <%= @dove_ldap_login_search %>
 <%- end -%>
 
 # Attributes and filter to get a list of all users

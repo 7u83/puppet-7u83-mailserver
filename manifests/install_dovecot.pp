@@ -31,7 +31,7 @@ class mailserver::install_dovecot(
 	$lda_sieve = false,
 	$local_userdb,
 
-) inherits mailserver::params {
+) inherits ::mailserver {
 	$dovecot_ldap_hosts = join($ldap_hosts," ")
 	$dovecot_protocols = join($protocols," ")
 

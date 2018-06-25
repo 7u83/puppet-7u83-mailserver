@@ -708,8 +708,10 @@ virtual_mailbox_maps = <%= @_virtual_mailbox_maps %>
 virtual_uid_maps = static:400
 virtual_gid_maps = static:400
 
+virtual_alias_maps = <%= @_virtual_alias_maps %>
+
 #virtual_transport = dovecot
-virtual_transport = lmtp:unix:/var/run/dovecot/lmtp
+#virtual_transport = lmtp:unix:/var/run/dovecot/lmtp
 #mailbox_transport = lmtp:unix:/var/run/dovecot/lmtp
 
 

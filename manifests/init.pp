@@ -66,12 +66,24 @@ class mailserver (
 	$ldap_auth_bind="no",
 	$ldap_base="",
 
-	$ldap_pass_filter="(&(objectClass=posixAccount)(uid=%u))",
-	$ldap_user_filter="(&(objectClass=posixAccount)(uid=%u))",
+
+	$ldap_login_search="(&(objectClass=posixAccount)(uid=%s))",
+	$ldap_mail_search="(&(objectClass=posixAccount)(mail=%s))",
+
+	$ldap_uid_attribute="uid",
+	$ldap_maildir_attribute="uid",
 
 
-	$ldap_lmtp_user_filter=undef,
-	$ldap_login_maps_query=undef,
+#	$ldap_homedir_attribute,
+
+	
+
+
+#	$ldap_pass_filter="(&(objectClass=posixAccount)(uid=%u))",
+#	$ldap_user_filter="(&(objectClass=posixAccount)(uid=%u))",
+
+
+#	$ldap_login_maps_query=undef,
 	$ldap_login_maps_result_attribute=undef,
 	$ldap_hosts = [],
 	$ldap_dn = undef,
@@ -153,7 +165,7 @@ class mailserver (
 	$mailbox_size_limit = 0,
 
 
-	$virtual_userdb = [],
+	$virtual_userdb = ["ldap"],
 
 	$virtual_mailbox_domains = [],
 	$virtual_mailbox_base = "/mail",
@@ -161,6 +173,8 @@ class mailserver (
 	$virtual_mailbox_maps = [],
 	$virtual_maps_src = undef,
 	$virtual_maps_dir = undef,
+	$virtual_mailbox_format = "maildir",
+	$virtual_mailbox_dir = "Maildir",
 
 	
 
@@ -238,6 +252,8 @@ class mailserver (
 
 ) inherits mailserver::params {
 
+	class {"mailserver::tobias":}
+
 
 	# ----------------------------------------------------------------
 	# Basic setup
@@ -291,6 +307,32 @@ class mailserver (
 	
 
 
+
+	if "ldap" in $virtual_userdb  {
+		$_virtual_ldap_mailbox_maps = "ldap:$postfix_dir/ldap_vmbox_maps.cf"
+
+		if $virtual_mailbox_format == "maildir"{
+			$result_format = "%s/$virtual_mailbox_dir/"
+		}
+		else{
+			$result_format ="%s"
+		}
+
+		mailserver::postfix_ldapmap{ "ldap_vmbox_maps.cf":
+			query_filter => $ldap_mail_search,
+			result_attribute => $ldap_maildir_attribute,
+			result_format => $result_format,
+		}
+
+
+
+
+#		$_virtual_mailbox_maps = "ldap:$postfix_dir/ldap_login_maps.cf"
+	}
+	
+
+
+
 	# ----------------------------------------------------------------
 	# Virtual setup
 	#
@@ -314,9 +356,54 @@ class mailserver (
 			owner => "$vmail_user",
 			require => User["$vmail_user"],
 		}
+
+
+
+		mailserver::postfix_hashmap{"valiases":
+			source => undef,
+			path => "$postfix_dir"
+		}
+
+		mailserver::postfix_hashmap{"vmboxes":
+			source => undef,
+			path => "$postfix_dir"
+		}
+
+		$_virtual_alias_maps = join( concat( 
+					["hash:$postfix_dir/valiases"],
+					$virtual_alias_maps.map|$elem|{ "hash:$aliasmaps_dir/$elem"} 
+				), " ")
+
+
+		$_virtual_mailbox_maps = join( concat( 
+					["hash:$postfix_dir/vmboxes"],
+					$virtual_mailbox_maps.map|$elem|{ "hash:$aliasmaps_dir/$elem"},
+					["$_virtual_ldap_mailbox_maps"]
+				), " ")
+
+
+		$virtual_alias_maps.each | String $file | {
+			mailserver::postfix_hashmap{"$file":
+				source => "puppet:///mail",
+				path => $aliasmaps_dir
+			}
+			
+		}
+
+		$virtual_mailbox_maps.each | String $file | {
+			mailserver::postfix_hashmap{"$file":
+				source => "puppet:///mail",
+				path => $aliasmaps_dir
+			}
+			
+		}
+
+
+
 	}
 
 
+	
 
 
 
@@ -446,10 +533,6 @@ class mailserver (
 
 
 
-	if $ldap {
-		$_virtual_mailbox_maps = "ldap:$postfix_dir/ldap_login_maps.cf"
-	}
-
 
 
 
@@ -472,6 +555,7 @@ class mailserver (
 			relay_restrictions => 	$smtp_relay_restrictions,
 			milters => $smtp_milters,
 			postscreen => $smtp_postscreen,
+
 		}
 	}
 
@@ -492,7 +576,7 @@ class mailserver (
 			$sender_login_maps = []
 		}
 		class {"mailserver::submission":
-			sender_login_maps =>  concat ($sender_login_maps, $sender_passwd_login_maps),
+			sender_login_maps =>  concat ($sender_login_maps, $sender_passwd_login_maps, $_virtual_alias_maps),
 			verify_recipient => $submission_verify_recipient,
 			rbls => $submission_rbls,
 			client_restrictions => $submission_client_restrictions,
@@ -804,8 +888,8 @@ class mailserver (
 
 
 	mailserver::postfix_ldapmap{ "ldap_login_maps.cf":
-		query_filter => $ldap_login_maps_query,
-		result_attribute => $ldap_login_maps_result_attribute
+		query_filter => $ldap_mail_search,
+		result_attribute => $ldap_uid_attribute
 			
 	}
 
@@ -846,6 +930,39 @@ define mailserver::copyfile(
 		require => Exec["mkdir $path for $title"],
 	} 
 }
+
+
+define mailserver::postfix_hashmap(
+	$source = undef,
+	$path 
+
+){
+	if $source != undef {
+		ensure_resource ("mailserver::copyfile",$title,{
+			path => "$path",
+			source => "$source",
+		})
+	}
+	else{
+		file{ "$path/$title":
+			ensure => present
+		}
+	}
+	
+
+	exec { "$mailserver::params::postmap_cmd $path/$title":
+		#creates => "$path/$title.db",
+		refreshonly => true,
+		require => File["$path/$title"],
+		subscribe => File["$path/$title"],
+	}	
+
+}
+
+
+
+
+
 
 define mailserver::install_sslcert (
 	$source=undef,
@@ -909,11 +1026,23 @@ define mailserver::service(
 
 define mailserver::postfix_ldapmap(
 	$query_filter,
-	$result_attribute
+	$result_attribute,
+	$result_format=undef,
 ){
+	if $result_format != undef {
+		$rf = "\nresult_format=$result_format"
+	}
+	else {
+		$rf = ""
+	}
+
+	
+	
+
 	$_ldap_hosts = join($mailserver::ldap_hosts," ")
 	file {"$::mailserver::params::postfix_dir/$title":
 		ensure => present,
+		notify => Service["$::mailserver::params::postfix_service"],
 		content => "bind=yes
 bind_dn=$::mailserver::ldap_dn
 bind_pw=$::mailserver::ldap_pass
@@ -921,19 +1050,9 @@ search_base=$::mailserver::ldap_base
 server_host=$_ldap_hosts
 version=3
 query_filter=$query_filter
-result_attribute=$result_attribute
+result_attribute=$result_attribute$rf
 "
 	}
-}
-
-
-define mailserver::postfix_hashmap(
-){
-	file {"$title":
-		ensure => present,
-		
-	}
-
 }
 
 
@@ -966,7 +1085,8 @@ class mailserver::mx(
 
 	$mynetworks = [],
 
-	$postscreen = false
+	$postscreen = false,
+
 
 
 )inherits mailserver::params{
@@ -1180,3 +1300,14 @@ class mailserver::submission(
 	
 
 
+
+
+class mailserver::tobias()
+inherits ::mailserver
+{
+	file {"/tmp/tobias":
+		ensure => file,
+		content => "$virtual_mailbox_dir ($postmap_cmd)",
+	}
+
+}

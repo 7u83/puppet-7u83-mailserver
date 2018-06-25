@@ -86,5 +86,8 @@ class mailserver::params {
 	$mailman_postmap_command = "$postmap_cmd"
 
 	$ssldir = "$etcdir/ssl"
+
+
+	$aliasmaps_dir = "$postfix_dir/aliasmaps"
 }
 
