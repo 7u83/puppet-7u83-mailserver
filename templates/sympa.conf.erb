@@ -11,7 +11,7 @@ domain	<%= @_sympa_domain %>
 <% if @sympa_virtual %>
 sendmail_aliases <%= @sympa_transport %>
 aliases_program <%= @postmap_cmd %>
-aliases_db_type = hash
+#aliases_db_type = hash
 <%- else -%>
 sendmail_aliases <%= @sympa_sendmail_aliases %>
 aliases_program <%= @postalias_cmd %>
