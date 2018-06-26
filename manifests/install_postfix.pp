@@ -23,9 +23,9 @@ class mailserver::install_postfix(
 				}
 			}
 
-			ensure_resource("file","/usr/local/etc/mail",{
-				ensure => directory
-			})
+#			ensure_resource("file","/usr/local/etc/mail",{
+#				ensure => directory
+#			})
 
 			file {"/usr/local/etc/mail/mailer.conf":
 				ensure => present,

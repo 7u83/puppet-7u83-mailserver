@@ -510,6 +510,22 @@ class mailserver (
 
 	}
 
+	
+	# ----------------------------------------------------------------
+	# DMARC Setup
+	#
+
+	Class["mailserver::opendmarc"] -> Class["::mailserver::install_postfix"]
+	
+	class {"mailserver::opendmarc":
+		umask => "0111",
+		reject_failures => true,
+		software_header => true,
+		spf_self_validate => true,
+	}
+	
+	$dmarc_milter_socket = "unix:$::mailserver::opendmarc::milter_socket"
+
 
 	# ----------------------------------------------------------------
 	# SMTP Server
@@ -869,6 +885,7 @@ class mailserver (
 	$non_smtpd_milters = join([
 		$clamav_milter_sock,
 		$opendkim_milter_sock,
+		
 	]," ")
 
 
@@ -1189,7 +1206,7 @@ class mailserver::mx(
 
 
 
-)inherits mailserver::params{
+)inherits mailserver{
 
 	$pfrbls = join ( $rbls.map|$elem|{ "reject_rbl_client $elem"} , " ") 
 
@@ -1199,6 +1216,7 @@ class mailserver::mx(
 	$pfrelay_restrictions =  join($relay_restrictions, " ")
 
 	$pflmilters = join([
+		$dmarc_milter_socket,
 		$clamav_milter_sock,
 		$opendkim_milter_sock,
 	]," ")
