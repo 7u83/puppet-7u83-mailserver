@@ -712,9 +712,9 @@ class mailserver (
 				require => Class["mailserver::install_sympa"]
 			}
 
-			exec {"$postalias_cmd $sympa_transport_sympa":
+			exec {"$postmap_cmd $sympa_transport_sympa":
 				refreshonly => true,
-				subscribe => File["$sympa_conf"],
+				subscribe => File["$sympa_transport_sympa"],
 				require => [File[$sympa_conf],File[$sympa_transport_sympa]]
 			}	
 
@@ -725,9 +725,9 @@ class mailserver (
 				require => Class["mailserver::install_sympa"]
 			}
 			
-			exec {"$postalias_cmd $sympa_transport":
+			exec {"$postmap_cmd $sympa_transport":
 				refreshonly => true,
-				subscribe => File["$sympa_conf"],
+				subscribe => File["$sympa_transport"],
 				require => [File[$sympa_conf],File[$sympa_transport]]
 			}	
 			$_virtual_sympa_mailbox_maps = "hash:$sympa_transport_sympa hash:$sympa_transport"
