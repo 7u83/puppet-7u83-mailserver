@@ -489,7 +489,7 @@ class mailserver (
 			ldap  => $ldap
 		})
 		if $dkim_domains == undef {
-			$_dkim_domains = $myorigin
+			$_dkim_domains = "*"  #$myorigin
 		}
 		else {
 			$_dkim_domains = $dkim_domains
