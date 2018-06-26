@@ -414,7 +414,7 @@ mynetworks = <%= @_mynetworks %>
 #alias_maps = hash:/etc/aliases, nis:mail.aliases
 #alias_maps = netinfo:/aliases
 #
-<% if @sympa %>
+<% if @sympa and not @sympa_virtual%>
 alias_maps = <%= @alias_maps %> hash:<%= @sympa_aliases %> hash:<%= @sympa_sendmail_aliases %>
 <% else %>
 alias_maps = <%= @alias_maps %>
@@ -704,7 +704,7 @@ shlib_directory = /usr/local/lib/postfix
 
 virtual_mailbox_domains = <%= @_virtual_mailbox_domains %>
 virtual_mailbox_base = <%= @virtual_mailbox_base %>
-virtual_mailbox_maps = <%= @_virtual_mailbox_maps %>
+virtual_mailbox_maps = <%= @_virtual_mailbox_maps %> <%= @_virtual_sympa_mailbox_maps %>
 virtual_uid_maps = static:400
 virtual_gid_maps = static:400
 
@@ -730,7 +730,7 @@ mailbox_size_limit = <%= @mailbox_size_limit %>
 recipient_delimiter = +
 unknown_local_recipient_reject_code = 550
 owner_request_special = no
-transport_maps = <%= @mailman_local_maps %>
+transport_maps = <%= @mailman_local_maps %> <%= @_virtual_sympa_mailbox_maps %>
 #address_verify_transport_maps = <%= @mailman_local_maps %>
 #
 <%-

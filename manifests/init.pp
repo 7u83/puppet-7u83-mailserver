@@ -84,7 +84,8 @@ class mailserver (
 
 
 #	$ldap_login_maps_query=undef,
-	$ldap_login_maps_result_attribute=undef,
+#	$ldap_login_maps_result_attribute=undef,
+
 	$ldap_hosts = [],
 	$ldap_dn = undef,
 	$ldap_pass = undef,
@@ -156,6 +157,11 @@ class mailserver (
 	$sympa_fcgi_port = "9000",
 	$sympa_web_location = "/sympa",
 	$sympa_static_web_location = "/static-sympa",
+	$sympa_virtual = false,
+	$sympa_domain = unset,
+	$sympa_log_level = false,
+
+
 
 	$lists_listmaster = undef,
 	$lists_url = undef,
@@ -252,7 +258,6 @@ class mailserver (
 
 ) inherits mailserver::params {
 
-	class {"mailserver::tobias":}
 
 
 	# ----------------------------------------------------------------
@@ -378,7 +383,7 @@ class mailserver (
 		$_virtual_mailbox_maps = join( concat( 
 					["hash:$postfix_dir/vmboxes"],
 					$virtual_mailbox_maps.map|$elem|{ "hash:$aliasmaps_dir/$elem"},
-					["$_virtual_ldap_mailbox_maps"]
+					["$_virtual_ldap_mailbox_maps"],
 				), " ")
 
 
@@ -595,14 +600,16 @@ class mailserver (
 	# ----------------------------------------------------------------
 	# Sympa 
 	#
-
 	if "sympa" in $services {
+
+		Class["mailserver::install_postfix"] -> Class["mailserver::install_sympa"]
+
 		$sympa = true
 
+		# if no db host is given install local mysql server
 		if $sympa_db_host == false {
 			$_sympa_db_host = "$localhost"
 			include '::mysql::server'
-#			class { '::mysql::server': }
 			mysql::db { "$sympa_db_name":
 				user     => "$sympa_db_user",
 				password => "$sympa_db_passwd",
@@ -614,22 +621,78 @@ class mailserver (
 			$_sympa_db_host = $sympa_db_host
 		}
 
+		# install sympa software
 		class {"mailserver::install_sympa":}
 
-
-		$sympa_domain = $_myorigin
+		# init some defaults for sympa
+		if $sympa_domain == unset {
+			$_sympa_domain = $_myorigin
+		}
+		else{
+			$_sympa_domain = $sympa_domain
+		}
+			
 		$sympa_url = $lists_url
+
+
 		$sympa_dmarc_protection_mode = $lists_dmarc_protection_mode ? {
 			"reject" => "dmarc_reject",
 			default => "dmarc_accept",
 		}
-
 		$sympa_listmaster = $lists_listmaster
+
+
+		if $sympa_virtual {
+			mailserver::service{ "Sympa":
+				service => "sympa",
+				type => "unix",
+				private =>'-',
+				unpriv => 'n',
+				chroot => 'n',
+				wakeup => '-',	
+				maxproc => '-',
+				command => "pipe",
+				args => [
+					"flags=hqRu user=sympa argv=$sympa_libexec_dir/queue \${nexthop}",
+				]
+
+			}
+
+			mailserver::service{ "SympaBounce":
+				service => "sympabounce",
+				type => "unix",
+				private =>'-',
+				unpriv => 'n',
+				chroot => 'n',
+				wakeup => '-',	
+				maxproc => '-',
+				command => "pipe",
+				args => [
+					"flags=hqRu user=sympa argv=$sympa_libexec_dir/bouncequeue \${nexthop}",
+				]
+			}
+
+			file {"$sympa_dir/list_aliases.tt2":
+				ensure => present,
+				source => "puppet:///modules/mailserver/sympa_list_aliases.tt2",
+				owner => "sympa",
+				require => Class["mailserver::install_sympa"],
+			}
+		}
+		else {
+			file {"$sympa_dir/list_aliases.tt2":
+				ensure => absent
+			}
+		}
+
+
+
+
 
 		file {"$sympa_conf":
 			ensure => file,
 			content => template("mailserver/sympa.conf.erb"),
-			require => Class["mailserver::install_sympa"],
+			require => [ Class["mailserver::install_postfix"],Class["mailserver::install_sympa"] ],
 			owner => "sympa",
 		}
 		
@@ -639,33 +702,69 @@ class mailserver (
 			require => Class["mailserver::install_sympa"]
 		}
 
-		file {"$sympa_aliases":
-			ensure => file,
-			content => template("mailserver/sympa_aliases.erb"),
-			require => Class["mailserver::install_sympa"]
+		
+		if $sympa_virtual {
+
+
+			file {"$sympa_transport_sympa":
+				ensure => file,
+				content => template("mailserver/transport.sympa.erb"),
+				require => Class["mailserver::install_sympa"]
+			}
+
+			exec {"$postalias_cmd $sympa_transport_sympa":
+				refreshonly => true,
+				subscribe => File["$sympa_conf"],
+				require => [File[$sympa_conf],File[$sympa_transport_sympa]]
+			}	
+
+			file {"$sympa_transport":
+				ensure => file,
+				owner => "sympa",
+				group => "sympa",
+				require => Class["mailserver::install_sympa"]
+			}
+			
+			exec {"$postalias_cmd $sympa_transport":
+				refreshonly => true,
+				subscribe => File["$sympa_conf"],
+				require => [File[$sympa_conf],File[$sympa_transport]]
+			}	
+			$_virtual_sympa_mailbox_maps = "hash:$sympa_transport_sympa hash:$sympa_transport"
 		}
-		file {"$sympa_sendmail_aliases":
-			ensure => file,
-			owner => "sympa",
-			group => "sympa",
-			require => Class["mailserver::install_sympa"]
+		else {
+		
+			file {"$sympa_aliases":
+				ensure => file,
+				content => template("mailserver/sympa_aliases.erb"),
+				require => Class["mailserver::install_sympa"]
+			}
+			file {"$sympa_sendmail_aliases":
+				ensure => file,
+				owner => "sympa",
+				group => "sympa",
+				require => Class["mailserver::install_sympa"]
+			}
+			exec {"$postalias_cmd $sympa_sendmail_aliases":
+				refreshonly => true,
+				subscribe => File["$sympa_conf"],
+				require => [File[$sympa_conf],File[$sympa_sendmail_aliases]]
+			}	
+			exec {"$postalias_cmd $sympa_aliases":
+				refreshonly => true,
+				subscribe => File["$sympa_conf"],
+				require => [File[$sympa_conf],File[$sympa_aliases]]
+			}	
+			$_virtual_sympa_mailbox_maps = ""
+
 		}
+
+
 
 		service {"$sympa_service":
 			ensure => "running",
 			require => [Class["mailserver::install_sympa"],File["$sympa_conf"]],
 			subscribe => [Class["mailserver::install_sympa"],File["$sympa_conf"]],
-		}	
-
-		exec {"$postalias_cmd $sympa_sendmail_aliases":
-			refreshonly => true,
-			subscribe => File["$sympa_conf"],
-			require => [File[$sympa_conf],File[$sympa_sendmail_aliases]]
-		}	
-		exec {"$postalias_cmd $sympa_aliases":
-			refreshonly => true,
-			subscribe => File["$sympa_conf"],
-			require => [File[$sympa_conf],File[$sympa_aliases]]
 		}	
 
 
@@ -728,7 +827,6 @@ class mailserver (
 			bindsocket_mode => "0600 -U www",
 			bindaddr => $_sympa_fcgi_addr,
 			bindport => $sympa_fcgi_port,
-
 		}
 
 		service {"$spawn_fcgi_service":
@@ -739,6 +837,8 @@ class mailserver (
 
 
 	}
+
+
 
 
 
@@ -1302,12 +1402,15 @@ class mailserver::submission(
 
 
 
-class mailserver::tobias()
-inherits ::mailserver
+
+
+
+class mailserver::config_sympa inherits mailserver
 {
-	file {"/tmp/tobias":
-		ensure => file,
-		content => "$virtual_mailbox_dir ($postmap_cmd)",
-	}
+	# ----------------------------------------------------------------
+	# Sympa 
+	#
+
+
 
 }

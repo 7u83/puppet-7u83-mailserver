@@ -1,8 +1,8 @@
 # Robot aliases for Sympa.
-sympa:                 "| <%=@sympa_libexec_dir%>/queue sympa@<%=@sympa_domain%>"
-listmaster:            "| <%=@sympa_libexec_dir%>/queue listmaster@<%=@sympa_domain%>"
-bounce:                "| <%=@sympa_libexec_dir%>/bouncequeue sympa@<%=@sympa_domain%>"
-abuse-feedback-report: "| <%=@sympa_libexec_dir%>/bouncequeue sympa@<%=@sympa_domain%>"
+sympa:                 "| <%=@sympa_libexec_dir%>/queue sympa@<%=@_sympa_domain%>"
+listmaster:            "| <%=@sympa_libexec_dir%>/queue listmaster@<%=@_sympa_domain%>"
+bounce:                "| <%=@sympa_libexec_dir%>/bouncequeue sympa@<%=@_sympa_domain%>"
+abuse-feedback-report: "| <%=@sympa_libexec_dir%>/bouncequeue sympa@<%=@_sympa_domain%>"
 sympa-request:         postmaster
 sympa-owner:           postmaster
 #listserv:             sympa
