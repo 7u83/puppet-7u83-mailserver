@@ -1,0 +1,9 @@
+# 
+# managed by puppet
+#
+upstream "local" {
+	self_scan = yes
+}
+
+bind_socket = "<%= @milter_socket %> mode=<%= @milter_socket_mode %>"
+
