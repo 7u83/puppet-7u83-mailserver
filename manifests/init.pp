@@ -330,9 +330,20 @@ class mailserver (
 		}
 
 
+		$_virtual_ldap_alias_maps = ["ldap:$postfix_dir/ldap_valias_maps.cf"]
+		mailserver::postfix_ldapmap{ "ldap_valias_maps.cf":
+			query_filter => $ldap_mail_search,
+			result_attribute => "mailForwardAddress",
+#			result_format => $result_format,
+		}
+
+
 
 
 #		$_virtual_mailbox_maps = "ldap:$postfix_dir/ldap_login_maps.cf"
+	}
+	else {
+		$_virtual_ldap_alias_maps = []
 	}
 	
 
@@ -376,7 +387,8 @@ class mailserver (
 
 		$_virtual_alias_maps = join( concat( 
 					["hash:$postfix_dir/valiases"],
-					$virtual_alias_maps.map|$elem|{ "hash:$aliasmaps_dir/$elem"} 
+					$virtual_alias_maps.map|$elem|{ "hash:$aliasmaps_dir/$elem"},
+					$_virtual_ldap_alias_maps			
 				), " ")
 
 
