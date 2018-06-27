@@ -539,6 +539,15 @@ class mailserver (
 	$dmarc_milter_socket = "unix:$::mailserver::opendmarc::milter_socket"
 
 
+	#
+	# RSPAMD Setup
+	#
+
+	class {"mailserver::rspamd":
+	}	
+
+	$rspamd_milter_socket = "unix:$::mailserver::rspamd::milter_socket"
+
 	# ----------------------------------------------------------------
 	# SMTP Server
 	#
@@ -1228,9 +1237,10 @@ class mailserver::mx(
 	$pfrelay_restrictions =  join($relay_restrictions, " ")
 
 	$pflmilters = join([
-		$dmarc_milter_socket,
+		$rspamd_milter_socket,
+#		$dmarc_milter_socket,
 		$clamav_milter_sock,
-		$opendkim_milter_sock,
+#		$opendkim_milter_sock,
 	]," ")
 
 	$pfmilters = join($milters," ")
@@ -1339,7 +1349,7 @@ class mailserver::submission(
 
 
 
-)inherits mailserver::params{
+)inherits mailserver{
 
 	$pfclient_restrictions = join($client_restrictions," ")
 
@@ -1361,6 +1371,7 @@ class mailserver::submission(
 	$_sender_login_maps = join($sender_login_maps, " ")
 
 	$pflmilters = join([
+		$rspamd_milter_socket,
 		$clamav_milter_sock,
 		$opendkim_milter_sock,
 	]," ")
