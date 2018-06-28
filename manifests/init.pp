@@ -57,6 +57,7 @@ class mailserver (
 	$local_userdb = ["passwd"],
 
 	$srs_domain = undef,
+	$srs_exclude_domains = undef,
 
 	#
 	# LDAP
@@ -434,11 +435,24 @@ class mailserver (
 	# SRS Setup
 	#
 	if $srs_domain != undef {
+		if $srs_exclude_domains == undef{
+			$_srs_exclude_domains = concat (concat ($virtual_mailbox_domains,
+							$mydestination ? {
+								undef => [],
+								default => $mydestination
+							}), $myhostname )
+		}
+		else {
+			$srs_exclude_domains = $srs_exclude_domains
+		}
+
 		class {"mailserver::postsrsd":
-			srs_domain => $srs_domain
+			srs_domain => $srs_domain,
+			srs_exclude_domains => $_srs_exclude_domains,
 		}
 	}
 
+		
 
 
 	# ----------------------------------------------------------------
