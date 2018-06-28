@@ -16,9 +16,9 @@ class mailserver::rspamd()
 			$milter_socket_mode = "0666"
 
 			package {"$pkg":
-				provider => 'portsng',
+#				provider => 'portsng',
 				ensure => 'installed',
-				require => Package['portupgrade']
+#				require => Package['portupgrade']
 			}
 		}
 	}	
