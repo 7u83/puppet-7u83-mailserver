@@ -753,3 +753,11 @@ local_recipient_maps = <%= @lmaps %>
 <% if @_postscreen_rbls %>
 postscreen_dnsbl_sites = <%= @_postscreen_rbls %>
 <% end %>
+
+
+<% if @srs_domain %>
+sender_canonical_maps = tcp:<%= @localhost %>:10001
+sender_canonical_classes = envelope_sender
+recipient_canonical_maps = tcp:<%= @localhost %>:10002
+recipient_canonical_classes= envelope_recipient,header_recipient
+<% end %>

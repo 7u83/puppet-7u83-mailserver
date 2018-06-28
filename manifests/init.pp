@@ -56,6 +56,7 @@ class mailserver (
 
 	$local_userdb = ["passwd"],
 
+	$srs_domain = undef,
 
 	#
 	# LDAP
@@ -419,8 +420,15 @@ class mailserver (
 
 	}
 
-
 	
+	# ----------------------------------------------------------------
+	# SRS Setup
+	#
+	if $srs_domain != undef {
+		class {"mailserver::postsrsd":
+			srs_domain => $srs_domain
+		}
+	}
 
 
 
