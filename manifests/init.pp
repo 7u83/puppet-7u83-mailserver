@@ -74,6 +74,15 @@ class mailserver (
 	$ldap_uid_attribute="uid",
 	$ldap_maildir_attribute="uid",
 
+	#
+	# SPAM
+	#
+
+	$spam_reject_score = undef,
+	$spam_greylist_score = undef,
+	$spam_add_header_score = undef,
+
+
 
 #	$ldap_homedir_attribute,
 
@@ -552,6 +561,9 @@ class mailserver (
 	#
 
 	class {"mailserver::rspamd":
+		reject_score => $spam_reject_score,
+		greylist_score => $spam_greylist_score,
+		add_header_score => $spam_add_header_score,
 	}	
 
 	$rspamd_milter_socket = "unix:$::mailserver::rspamd::milter_socket"

@@ -2,7 +2,11 @@
 # rspamd.pp
 #
 
-class mailserver::rspamd()
+class mailserver::rspamd(
+	$reject_score = undef,
+	$greylist_score = undef,
+	$add_header_score = undef,
+)
 {
         case $::osfamily {
 
@@ -11,6 +15,7 @@ class mailserver::rspamd()
 			})
 
 			$pkg = "rspamd"
+			$service = "rspamd"
 			$cfg_dir = "/usr/local/etc/rspamd"
 			$milter_socket = "/var/run/rspamd/milter"
 			$milter_socket_mode = "0666"
@@ -28,6 +33,7 @@ class mailserver::rspamd()
 
 	$cfgfiles = [
 		"local.d/milter_headers.conf",
+		"local.d/actions.conf",
 		"local.d/worker-normal.inc",
 		"local.d/worker-proxy.inc",
 	]
@@ -37,6 +43,20 @@ class mailserver::rspamd()
 		ensure => directory
 	}
 
+	class {"mailserver::rspamd::update_cfgfiles":}
+
+	service {"$service":
+		ensure => running,
+		require => Class["mailserver::rspamd::update_cfgfiles"],
+		subscribe => Class["mailserver::rspamd::update_cfgfiles"],
+	}
+
+}
+
+
+class mailserver::rspamd::update_cfgfiles()
+inherits mailserver::rspamd{
+
 	$cfgfiles.each | String $file | {
 		file { "$cfg_dir/$file":
 			ensure => file,
@@ -44,6 +64,5 @@ class mailserver::rspamd()
 			require => File["$local_dir"],
 		}
 	}
-
-
 }
+
