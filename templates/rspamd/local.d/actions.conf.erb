@@ -1,0 +1,11 @@
+# managed by puppet
+
+<%- if defined?(@reject_score) -%>
+reject = <%= @reject_score %>
+<%- end -%>
+<%- if defined?(@add_header_score) -%>
+add_header = <%= @add_header_score %>
+<%- end -%>
+<%- if defined?(@greylist_score) -%>
+greylist = <%= @greylist_score %>
+<%- end -%>
