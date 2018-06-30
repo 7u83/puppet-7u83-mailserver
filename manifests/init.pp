@@ -178,6 +178,7 @@ class mailserver (
 	$lists_web_url = undef,
 	$lists_dmarc_protection_mode = "reject",
 
+	$default_destination_rate_delay = undef,
 
 	$mailbox_size_limit = 0,
 
