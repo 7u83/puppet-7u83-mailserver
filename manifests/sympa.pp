@@ -27,6 +27,8 @@ class mailserver::sympa
 inherits mailserver::params
 
 {
+	$_sympa_domain = $domain
+
 	if $localhost == undef {
 		$_localhost = "loclahost"
 	}
