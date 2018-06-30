@@ -4,11 +4,11 @@
 ## Primary mail domain name
 ## Example: domain	mail.example.org
 #domain	(You must define this parameter)
-<% if @_sympa_domain %>
-domain	<%= @_sympa_domain %>
+<% if @domain %>
+domain	<%= @domain %>
 <% end %>
 
-<% if @sympa_virtual %>
+<% if @virtual %>
 sendmail_aliases <%= @sympa_transport %>
 aliases_program <%= @postmap_cmd %>
 #aliases_db_type = hash
@@ -77,7 +77,7 @@ listmaster	<%= @sympa_listmaster %>
 ## "/var/run/postgresql" for connection with Unix domain socket.
 ## Example: db_host	localhost
 #db_host	localhost
-db_host <%= @_sympa_db_host %>
+db_host <%= @_db_host %>
 
 ## db_port
 ## Port of the database server
@@ -88,13 +88,13 @@ db_host <%= @_sympa_db_host %>
 ## With SQLite, this must be the full path to database file. With Oracle
 ## Database, this must be Oracle SID.
 #db_name	sympa
-db_name <%= @sympa_db_name %>
+db_name <%= @db_name %>
 
 ## db_user
 ## User for the database connection
 ## Example: db_user	sympa
 #db_user	user_name
-db_user 	<%= @sympa_db_user %>
+db_user 	<%= @db_user %>
 
 ## db_passwd
 ## Password for the database connection
@@ -102,7 +102,7 @@ db_user 	<%= @sympa_db_user %>
 ## not a public internet service ?)
 ## Example: db_passwd	your_passwd
 #db_passwd	user_password
-db_passwd	<%= @sympa_db_passwd %>
+db_passwd	<%= @db_passwd %>
 
 ## db_env
 ## Environment variables setting for database
@@ -151,8 +151,8 @@ db_passwd	<%= @sympa_db_passwd %>
 ## 3: Almost everything is logged.
 ## Example: log_level	2
 #log_level	0
-<% if @sympa_log_level %>
-log_level = <%= @sympa_log_level %>
+<% if @log_level %>
+log_level = <%= @log_level %>
 <% end %>
 
 ###\\\\ Receiving ////###
