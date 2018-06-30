@@ -27,9 +27,7 @@ dmarc_protection_mode <%= @sympa_dmarc_protection_mode %>
 ## listmasters will have privileges to manage all virtual hosts.
 ## Example: listmaster	your_email_address@domain.tld
 #listmaster	(You must define this parameter)
-<% if @sympa_listmaster %>
-listmaster	<%= @sympa_listmaster %>
-<% end %>
+listmaster	<%= @listmaster %>
 
 ## lang
 ## Default language
@@ -583,7 +581,7 @@ mhonarc <%= @mhonarc_cmd %>
 ## This is used to construct URLs of web interface.
 ## Example: wwsympa_url	http://web.example.org/sympa
 #wwsympa_url	(You must define this parameter)
-wwsympa_url <%= @sympa_url %>
+wwsympa_url <%= @web_url %>
 
 ## http_host
 ## URL prefix of WWSympa behind proxy
@@ -593,7 +591,7 @@ wwsympa_url <%= @sympa_url %>
 ## URL for static contents
 ## HTTP server have to map it with "static_content_path" directory.
 #static_content_url	/static-sympa
-static_content_url	<%= @sympa_static_web_location %>
+static_content_url	<%= @static_web_location %>
 
 
 ## static_content_path

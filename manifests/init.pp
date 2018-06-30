@@ -169,7 +169,7 @@ class mailserver (
 	$sympa_web_location = "/sympa",
 	$sympa_static_web_location = "/static-sympa",
 	$sympa_virtual = false,
-	$sympa_domain = unset,
+	$sympa_domain = undef,
 	$sympa_log_level = false,
 
 
@@ -672,6 +672,7 @@ class mailserver (
 	# Sympa 
 	#
 	if "sympa" in $services {
+		$sympa = true
 
 		# init some defaults for sympa
 	
@@ -684,10 +685,22 @@ class mailserver (
 			listmaster => $lists_listmaster,
 			web_url => $lists_web_url,
 
+			static_web_location => $sympa_static_web_location,	
+			web_location => $sympa_web_location,
+			localhost => $localhost,
 
-					
+			virtual => $sympa_virtual,
+			dmarc_protection_mode => $lists_dmarc_protection_mode
 				
 
+		}
+
+		if $sympa_virtual {
+			$_virtual_sympa_mailbox_maps = "hash:$::mailserver::sympa::sympa_transport_sympa hash:$::mailserver::sympa::sympa_transport"
+		}
+		else {
+			$sympa_aliases = $::mailserver::sympa::sympa_aliases
+			$sympa_sendmail_aliases = $::mailserver::sympa::sympa_sendmail_aliases
 		}
 
 

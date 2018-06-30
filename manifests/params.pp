@@ -62,20 +62,7 @@ class mailserver::params {
 			$mailman_logdir = "/var/log/mailman"
 
 
-			$sympa_aliases = "/usr/local/etc/sympa/sympa_aliases"
-			$sympa_sendmail_aliases ="/usr/local/etc/sympa/sympa_sendmail_aliases"
 
-			$sympa_transport = "/usr/local/etc/sympa/sympa_transport"
-			$sympa_virtal_sympa = "/usr/local/etc/sympa/virtal.sympa"
-			$sympa_transport_sympa = "/usr/local/etc/sympa/transport.sympa"
-
-
-			$sympa_libexec_dir="/usr/local/libexec/sympa"
-			$sympa_static_dir="/usr/local/share/sympa/static"
-			$sympa_health_check="/usr/sbin/chown -R sympa /usr/local/share/sympa && /usr/local/bin/sympa.pl --health_check"
-		
-			
-			$perl = "/usr/local/bin/perl"
 			$spawn_fcgi_service = "spawn-fcgi"
 
 		}
