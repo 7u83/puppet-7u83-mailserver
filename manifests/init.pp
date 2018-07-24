@@ -1057,6 +1057,7 @@ class mailserver::mx(
 
 	$postscreen = false,
 
+	$tls_security = "may",
 
 
 )inherits mailserver{
@@ -1099,7 +1100,22 @@ class mailserver::mx(
 		$service = 'smtp'
 		$type = 'inet'
 	}
+
+	$kf = $::mailserver::_smtpd_sslkey
 	
+	if $tls_security != false {
+		$ssl_options ="{ -o smtpd_tls_security_level = $tls_security }
+	{ -o smtp_tls_note_starttls_offer = yes }
+	{ -o smtpd_tls_key_file = $kf }
+	{ -o smtpd_tls_cert_file = $::mailserver::_smtpd_sslcert }
+	{ -o smtpd_tls_loglevel = 1 }
+	{ -o smtpd_tls_received_header = yes }
+	{ -o smtpd_tls_session_cache_timeout = 3600s }"
+	}
+	else{
+		$ssl_options = ""
+	}
+
 
 	mailserver::service{ "Postfix SMTP Server":
 		service => $service,
@@ -1114,6 +1130,7 @@ class mailserver::mx(
 			"{ -o smtpd_relay_restrictions = $pfrelay_restrictions }",
 			"{ -o smtpd_milters = $pflmilters $pfmilters}",
 			"{ -o smtpd_sasl_auth_enable = no }",
+			"$ssl_options",
 		]
 
 	}
