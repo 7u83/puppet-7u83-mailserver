@@ -55,6 +55,7 @@ inherits mailserver::params
 
 		}
 		default: {
+			$packages = ["python2","python3","py36-sqlite3","security/ca_root_nss"] #,"devel/py-pip"]
 		}
 	}
 

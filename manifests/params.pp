@@ -1,3 +1,5 @@
+#params
+
 class mailserver::params {
         case $::osfamily {
                 'FreeBSD':{
@@ -66,6 +68,43 @@ class mailserver::params {
 			$spawn_fcgi_service = "spawn-fcgi"
 
 		}
+		default: {
+			$opendkim_service = "opendkim"
+			$opendkim_cfgdir = "//etc/mail"
+			$opendkim_keysdir = "/etc/mail"
+			$opendkim_uid='postfix'
+			$opendkim_gid='postfix'
+			$opendkim_socket='/var/spool/postfix/private/opendkim'
+			$opendkim_milter_sock='unix:/var/spool/postfix/private/opendkim'
+
+			$spawn_fcgi_service = "spawn-fcgi"
+
+			$dovecot_service = 'dovecot'
+			$dovecot_cfgbasedir = '/etc/dovecot'
+			$dovecot_cfgconfdir = '/etc/dovecot/conf.d'
+			$dovecot_deliver = '/usr/libexec/dovecot/deliver'
+			$dovecot_lda = '/usr/libexec/dovecot/dovecot-lda'
+
+			$clamav_milter_sock="unix:/var/run/clamav/clmilter.sock"
+			$clamav_milter_conf="/usr/local/etc/clamav-milter.conf"
+			$clamav_clamd_conf="/usr/local/etc/clamd.conf"
+
+			$clamav_milter_service="clamav-milter"
+			$clamav_clamd_service="clamav-clamd"
+			$clamav_freshclam_service="clamav-freshclam"
+			$clamav_freshclam="/usr/local/bin/freshclam"
+			$clamav_freshclam_file="/var/db/clamav/main.cvd"
+
+		        $postfix_pkg = 'postfix'
+			$postfix_pkg_provider = undef
+			$postfix_main_cf = '/etc/postfix/main.cf'
+			$postfix_master_cf = '/etc/postfix/master.cf'
+			$postfix_service = 'postfix'
+			$postfix_dir = "/etc/postfix"
+			$postmap_cmd = "/usr/sbin/postmap"
+			$postalias_cmd = "/usr/sbin/postalias"
+
+}
 	}
 
 	$mailman_user = "mailman"

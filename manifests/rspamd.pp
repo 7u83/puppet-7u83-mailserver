@@ -20,16 +20,21 @@ class mailserver::rspamd(
 			$milter_socket = "/var/run/rspamd/milter"
 			$milter_socket_mode = "0666"
 
-			package {"$pkg":
-#				provider => 'portsng',
-				ensure => 'installed',
-#				require => Package['portupgrade']
-			}
+		}
+		default: {
+			$pkg = "rspamd"
+			$service = "rspamd"
+			$cfg_dir = "/etc/rspamd"
+			$milter_socket = "/var/run/rspamd/milter"
+			$milter_socket_mode = "0666"
 		}
 	}	
 
 	$local_dir = "$cfg_dir/local.d"
 
+	package {"$pkg":
+		ensure => 'installed',
+	}
 
 	$cfgfiles = [
 		"local.d/milter_headers.conf",

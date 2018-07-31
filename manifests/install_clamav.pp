@@ -1,3 +1,5 @@
+#
+
 class mailserver::install_clamav(
 	$ldap = true
 ) {

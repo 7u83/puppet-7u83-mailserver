@@ -13,15 +13,14 @@ class mailserver::postsrsd(
         case $::osfamily {
 
                 'FreeBSD':{
+			Mailserver::Sysrc["postsrsd_domain"] -> Service[$service]
+			Mailserver::Sysrc["postsrsd_exclude_domains"] -> Service[$service]
+
 			ensure_resource ("package","portupgrade",{
 			})
 
 			$pkg = "postsrsd"
 			$service = "postsrsd"
-
-			package {"$pkg":
-				ensure => 'installed',
-			}
 
 			mailserver::sysrc{"postsrsd_domain":
 				ensure => "$srs_domain"
@@ -30,15 +29,24 @@ class mailserver::postsrsd(
 				ensure => "$xdomains_arg"
 			}
 		}
+		default: {
+			$pkg = "postsrsd"
+			$service = "postsrsd"
+
+			
+		}
+
+
 	}	
+
+	package {"$pkg":
+		ensure => 'installed',
+	}
 
 	file {"/tmp/srs_domain":
 		ensure => present,
 		content => "$srs_domain $xdomains_arg",
 	}
-
-	Mailserver::Sysrc["postsrsd_domain"] -> Service[$service]
-	Mailserver::Sysrc["postsrsd_exclude_domains"] -> Service[$service]
 
 	service {"$service":
 		ensure => running,

@@ -27,7 +27,10 @@ class mailserver::opendmarc(
 
 		}
 		default: {
-			package { "opendmarc":
+			$pkg = "opendmarc"
+			$conf = "/etc/mail/opendmarc.conf"
+			$service = "opendmarc"
+			package { "$pkg":
 				ensure => installed
 			}
 

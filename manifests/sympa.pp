@@ -85,6 +85,35 @@ inherits mailserver::params
 
 		}
 		default: {
+#			$packages = []
+			
+			$sympa_dir = "/etc/sympa"
+			$sympa_package = "sympa"
+			$sympa_service="sympa"
+			$sympa_fcgi_program="/usr/local/libexec/sympa/wwsympa.fcgi"
+			$sympa_fcgi_socket="/var/run/wwsympa.socket"
+			$sympa_health_check="/usr/sbin/chown -R sympa /usr/local/share/sympa && /usr/local/bin/sympa.pl --health_check"
+			$sympa_static_dir="/usr/local/share/sympa/static"
+			$sympa_aliases = "/usr/local/etc/sympa/sympa_aliases"
+			$sympa_sendmail_aliases ="/usr/local/etc/sympa/sympa_sendmail_aliases"
+			$sympa_transport = "/usr/local/etc/sympa/sympa_transport"
+			$sympa_virtal_sympa = "/usr/local/etc/sympa/virtal.sympa"
+			$sympa_transport_sympa = "/usr/local/etc/sympa/transport.sympa"
+
+			$sympa_libexec_dir="/usr/local/libexec/sympa"
+			$perl = "/usr/local/bin/perl"
+
+
+			$mhonarc_cmd = "/usr/local/bin/mhonarc"
+	
+#			package {$packages:
+#				ensure => installed	
+#			}
+
+			package {"sympa":
+				ensure => "installed",
+			}
+			
 		}
 	}
 

@@ -67,15 +67,9 @@ class mailserver::install_dovecot(
 			}
 		}
 		default: {
-                        $postfix_pkg = "dovecot"
-#                        package {"postfix":
-#                                ensure => 'installed'
-#                        }
-#                        if $ldap {
-#                                package {'postfix-ldap':
-#                                        ensure => 'installed'
- #                               }
- #                       }
+			package {"dovecot-core":
+				ensure => 'latest',
+			}
 		}
 	}
 
