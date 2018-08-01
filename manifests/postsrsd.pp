@@ -8,7 +8,6 @@ class mailserver::postsrsd(
 )
 {
 
-aisdofioasidf
 	$xdomains_arg = join($srs_exclude_domains,",")
 
         case $::osfamily {
