@@ -1,6 +1,6 @@
 # dkim install
 
-class mailserver::install_opendkim(
+class mailserver::opendkim(
 	$dkim_source = "puppet:///dkim",
 	$selector,
 	$domains,
@@ -9,24 +9,33 @@ class mailserver::install_opendkim(
 ) inherits mailserver::params
 {
 
-	$keyfile  = "$opendkim_keysdir/${selector}.private"
-	$dkmynetworks = join($mynetworks,", ")
-
         case $::osfamily {
                 'FreeBSD':{
+
+			$service = "milter-opendkim"
+			$cfgdir = "/usr/local/etc/mail"
+			$keysdir = "/usr/local/etc/mail"
+			$uid='postfix'
+			$gid='postfix'
+			$socket='/var/spool/postfix/private/opendkim'
+			$milter_sock='unix:/var/spool/postfix/private/opendkim'
+
+
+
+
 			package { "opendkim":
 				ensure => installed
 			}
 
 			mailserver::sysrc{"milteropendkim_socket":
-				ensure => "$opendkim_socket"
+				ensure => "$socket"
 			}
 
 			mailserver::sysrc{"milteropendkim_gid":
-				ensure => "$opendkim_gid"
+				ensure => "$gid"
 			}
 			mailserver::sysrc{"milteropendkim_uid":
-				ensure => "$opendkim_uid"
+				ensure => "$uid"
 			}
 
 		}
@@ -38,14 +47,19 @@ class mailserver::install_opendkim(
 		}
 	}
 
+	$keyfile  = "$keysdir/${selector}.private"
+	$dkmynetworks = join($mynetworks,", ")
+
+
+
 	file { "$opendkim_keysdir/${selector}.private":
 		ensure => present,
 		source => "$dkim_source/${selector}.private",
 		mode => "600",
-		owner => "postfix"
+		owner => "$uid"
 	}
 
-	file { "$opendkim_cfgdir/opendkim.conf":
+	file { "$cfgdir/opendkim.conf":
 		ensure => present,
 		content => template("mailserver/opendkim.conf.erb"),
 

@@ -44,13 +44,13 @@ class mailserver::params {
 			}
 
 
-			$opendkim_service = "milter-opendkim"
-			$opendkim_cfgdir = "/usr/local/etc/mail"
-			$opendkim_keysdir = "/usr/local/etc/mail"
-			$opendkim_uid='postfix'
-			$opendkim_gid='postfix'
-			$opendkim_socket='/var/spool/postfix/private/opendkim'
-			$opendkim_milter_sock='unix:/var/spool/postfix/private/opendkim'
+#			$opendkim_service = "milter-opendkim"
+#			$opendkim_cfgdir = "/usr/local/etc/mail"
+#			$opendkim_keysdir = "/usr/local/etc/mail"
+#			$opendkim_uid='postfix'
+#			$opendkim_gid='postfix'
+#			$opendkim_socket='/var/spool/postfix/private/opendkim'
+#			$opendkim_milter_sock='unix:/var/spool/postfix/private/opendkim'
 
 
 			$mailman_vardir = "/usr/local/mailman3"
@@ -69,13 +69,13 @@ class mailserver::params {
 
 		}
 		default: {
-			$opendkim_service = "opendkim"
-			$opendkim_cfgdir = "/etc/"
-			$opendkim_keysdir = "/etc/mail"
-			$opendkim_uid='postfix'
-			$opendkim_gid='postfix'
-			$opendkim_socket='/var/spool/postfix/private/opendkim'
-			$opendkim_milter_sock='unix:/var/spool/postfix/private/opendkim'
+#			$opendkim_service = "opendkim"
+#			$opendkim_cfgdir = "/etc/"
+#			$opendkim_keysdir = "/etc/mail"
+#			$opendkim_uid='postfix'
+#			$opendkim_gid='postfix'
+#			$opendkim_socket='/var/spool/postfix/private/opendkim'
+#			$opendkim_milter_sock='unix:/var/spool/postfix/private/opendkim'
 
 			$spawn_fcgi_service = "spawn-fcgi"
 

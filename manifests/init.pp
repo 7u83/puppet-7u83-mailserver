@@ -178,7 +178,7 @@ class mailserver (
 	$lists_web_url = undef,
 	$lists_dmarc_protection_mode = "reject",
 
-	$default_destination_rate_delay = undef,
+	$default_destination_rate_delay = "1s",
 
 	$mailbox_size_limit = 0,
 
@@ -539,16 +539,16 @@ class mailserver (
 			$_dkim_domains = $dkim_domains
 		}
 
-		class {"mailserver::install_opendkim":
+		class {"mailserver::opendkim":
 			selector => $dkim_selector,
 			domains => $_dkim_domains,
 
 			dkim_source => $dkim_source,
 			mynetworks => $mynetworks
 		}
-		service {"$opendkim_service":
+		service {"$::mailserver::opendkim::service":
 			ensure => "running",
-			subscribe => Class["mailserver::install_opendkim"],
+			subscribe => Class["mailserver::opendkim"],
 			require => Class["mailserver::install_postfix"],
 		}
 
@@ -737,7 +737,7 @@ class mailserver (
 
 	$non_smtpd_milters = join([
 		$clamav_milter_sock,
-		$opendkim_milter_sock,
+		$::mailserver::opendkim::milter_sock,
 		
 	]," ")
 
@@ -1222,7 +1222,7 @@ class mailserver::submission(
 	$pflmilters = join([
 		$rspamd_milter_socket,
 		$clamav_milter_sock,
-		$opendkim_milter_sock,
+		$mailserver::opendkim::milter_sock,
 	]," ")
 
 	$pfmilters = join($milters," ")
