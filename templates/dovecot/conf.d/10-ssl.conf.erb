@@ -48,7 +48,7 @@
 # Or migrate from old ssl-parameters.dat file with the command dovecot
 # gives on startup when ssl_dh is unset.
 #ssl_dh = </usr/local/etc/dovecot/dh.pem
-ssl_dh = </usr/local/etc/dovecot/dh.pem
+#ssl_dh = <<%=@dovecot_cfgbasedir%>/dh.pem
 
 
 # Minimum SSL protocol version to use. Potentially recognized values are SSLv3,

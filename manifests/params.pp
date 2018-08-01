@@ -70,7 +70,7 @@ class mailserver::params {
 		}
 		default: {
 			$opendkim_service = "opendkim"
-			$opendkim_cfgdir = "//etc/mail"
+			$opendkim_cfgdir = "/etc/"
 			$opendkim_keysdir = "/etc/mail"
 			$opendkim_uid='postfix'
 			$opendkim_gid='postfix'
@@ -90,10 +90,10 @@ class mailserver::params {
 			$clamav_clamd_conf="/usr/local/etc/clamd.conf"
 
 			$clamav_milter_service="clamav-milter"
-			$clamav_clamd_service="clamav-clamd"
+			$clamav_clamd_service="clamav-daemon"
 			$clamav_freshclam_service="clamav-freshclam"
-			$clamav_freshclam="/usr/local/bin/freshclam"
-			$clamav_freshclam_file="/var/db/clamav/main.cvd"
+			$clamav_freshclam="/usr/bin/freshclam"
+			$clamav_freshclam_file="/var/lib/clamav/main.cvd"
 
 		        $postfix_pkg = 'postfix'
 			$postfix_pkg_provider = undef

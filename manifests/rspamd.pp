@@ -20,21 +20,42 @@ class mailserver::rspamd(
 			$milter_socket = "/var/run/rspamd/milter"
 			$milter_socket_mode = "0666"
 
+			package {"$pkg":
+				ensure => 'installed',
+			}
+
 		}
 		default: {
+
+
 			$pkg = "rspamd"
 			$service = "rspamd"
 			$cfg_dir = "/etc/rspamd"
 			$milter_socket = "/var/run/rspamd/milter"
 			$milter_socket_mode = "0666"
+			apt::source {"rspamd_source":
+				location =>  "http://rspamd.com/apt-stable/",
+				repos => 'main',
+				release => 'xenial',
+				key => {
+					id => "3FA347D5E599BE4595CA2576FFA232EDBF21E25E",
+					server => "pgp.mit.edu",
+				},
+				include => {
+					'src' => true,
+					'dev' => true,
+				}
+				
+			}	
+			package {"$pkg":
+				ensure => 'installed',
+				require => Apt::Source['rspamd_source'],
+			}
+
 		}
 	}	
 
 	$local_dir = "$cfg_dir/local.d"
-
-	package {"$pkg":
-		ensure => 'installed',
-	}
 
 	$cfgfiles = [
 		"local.d/milter_headers.conf",

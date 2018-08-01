@@ -31,6 +31,9 @@ class mailserver::install_dovecot(
 	$lda_sieve = false,
 	$local_userdb,
 
+
+	$dhbits = 1024,
+
 ) inherits ::mailserver {
 	$dovecot_ldap_hosts = join($ldap_hosts," ")
 	$dovecot_protocols = join($protocols," ")
@@ -67,8 +70,18 @@ class mailserver::install_dovecot(
 			}
 		}
 		default: {
-			package {"dovecot-core":
+			package {["dovecot-core","dovecot-imapd","dovecot-pop3d"]:
 				ensure => 'latest',
+			}
+			if $ldap {
+				package {"dovecot-ldap":
+					ensure => 'latest',
+				}
+			}
+			if $solr {
+				package {"dovecot-ldap":
+					ensure => 'latest',
+				}
 			}
 		}
 	}
@@ -113,8 +126,8 @@ class mailserver::install_dovecot(
 	}
 
 
-	exec  {"/usr/bin/openssl dhparam -out /usr/local/etc/dovecot/dh.pem 2048":
-		creates => "/usr/local/etc/dovecot/dh.pem",
+	exec  {"/usr/bin/openssl dhparam -out $dovecot_cfgbasedir/dh.pem $dhbits":
+		creates => "$dovecot_cfgbasedir/dh.pem",
 		require => File["$dovecot_cfgbasedir"],
 	}
 

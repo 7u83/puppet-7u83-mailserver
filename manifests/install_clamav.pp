@@ -11,6 +11,10 @@ class mailserver::install_clamav(
 			}
 		}
 		default: {
-       		}
+       			package {"clamav-milter":
+#				provider => "portsng",
+				ensure => 'installed',
+			}
+		}
 	}
 }
