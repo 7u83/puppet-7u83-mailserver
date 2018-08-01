@@ -16,7 +16,7 @@ class mailserver::params {
 			$postfix_dir = "/usr/local/etc/postfix"
 			$postmap_cmd = "/usr/local/sbin/postmap"
 			$postalias_cmd = "/usr/local/sbin/postalias"
-
+			$postfix_maildrop_gid = "maildrop"
 
 			$dovecot_service = 'dovecot'
 			$dovecot_cfgbasedir = '/usr/local/etc/dovecot'
@@ -103,6 +103,7 @@ class mailserver::params {
 			$postfix_dir = "/etc/postfix"
 			$postmap_cmd = "/usr/sbin/postmap"
 			$postalias_cmd = "/usr/sbin/postalias"
+			$postfix_maildrop_gid = "mail"
 
 }
 	}

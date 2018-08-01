@@ -35,6 +35,10 @@ class mailserver::install_postfix(
 		}
 		default: {
                         $postfix_pkg = "postfix"
+                        package {"maildrop":
+                                ensure => 'installed'
+                        }
+
                         package {"postfix":
                                 ensure => 'installed'
                         }

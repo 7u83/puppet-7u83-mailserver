@@ -19,11 +19,9 @@ class mailserver::opendkim(
 			$gid='postfix'
 			$socket='/var/spool/postfix/private/opendkim'
 			$milter_sock='unix:/var/spool/postfix/private/opendkim'
+			$pkg = "opendkim"
 
-
-
-
-			package { "opendkim":
+			package { "$pkg":
 				ensure => installed
 			}
 
@@ -40,7 +38,16 @@ class mailserver::opendkim(
 
 		}
 		default: {
-			package { "opendkim":
+			$service = "opendkim"
+			$cfgdir = "/etc/mail"
+			$keysdir = "/etc/mail"
+			$uid='opendkim'
+			$gid='opendkim'
+			$socket='/var/spool/postfix/private/opendkim'
+			$milter_sock='unix:/var/spool/postfix/private/opendkim'
+			$pkg = "opendkim"
+
+			package { "$pkg":
 				ensure => installed
 			}
 
@@ -52,11 +59,12 @@ class mailserver::opendkim(
 
 
 
-	file { "$opendkim_keysdir/${selector}.private":
+	file { "$keysdir/${selector}.private":
 		ensure => present,
 		source => "$dkim_source/${selector}.private",
 		mode => "600",
-		owner => "$uid"
+		owner => "$uid",
+		require => Package["$pkg"],
 	}
 
 	file { "$cfgdir/opendkim.conf":
