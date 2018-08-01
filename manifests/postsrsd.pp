@@ -8,19 +8,20 @@ class mailserver::postsrsd(
 )
 {
 
+aisdofioasidf
 	$xdomains_arg = join($srs_exclude_domains,",")
 
         case $::osfamily {
 
                 'FreeBSD':{
+			$pkg = "postsrsd"
+			$service = "postsrsd"
+
 			Mailserver::Sysrc["postsrsd_domain"] -> Service[$service]
 			Mailserver::Sysrc["postsrsd_exclude_domains"] -> Service[$service]
 
 			ensure_resource ("package","portupgrade",{
 			})
-
-			$pkg = "postsrsd"
-			$service = "postsrsd"
 
 			mailserver::sysrc{"postsrsd_domain":
 				ensure => "$srs_domain"
