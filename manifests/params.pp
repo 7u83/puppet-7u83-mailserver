@@ -7,7 +7,7 @@ class mailserver::params {
 
 			$etcdir = "/usr/local/etc"
 
-
+			$postfix_command_direcory = '/usr/local/sbin'
                         $postfix_pkg = 'postfix'
 			$postfix_pkg_provider = 'portsng'
 			$postfix_main_cf = '/usr/local/etc/postfix/main.cf'
@@ -17,6 +17,7 @@ class mailserver::params {
 			$postmap_cmd = "/usr/local/sbin/postmap"
 			$postalias_cmd = "/usr/local/sbin/postalias"
 			$postfix_maildrop_gid = "maildrop"
+			$postfix_daemon_directory = '/usr/local/libexec/postfix'
 
 			$dovecot_service = 'dovecot'
 			$dovecot_cfgbasedir = '/usr/local/etc/dovecot'
@@ -105,6 +106,8 @@ class mailserver::params {
 			$postalias_cmd = "/usr/sbin/postalias"
 			$postfix_maildrop_gid = "mail"
 
+			$postfix_command_direcory = '/usr/sbin'
+			$postfix_daemon_directory = '/usr/lib/postfix/sbin'
 }
 	}
 

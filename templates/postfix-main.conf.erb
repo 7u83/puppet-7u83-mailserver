@@ -52,13 +52,15 @@ queue_directory = /var/spool/postfix
 # The command_directory parameter specifies the location of all
 # postXXX commands.
 #
-command_directory = /usr/local/sbin
+#command_directory = /usr/local/sbin
+command_directory = <%= @postfix_command_directory %>
 
 # The daemon_directory parameter specifies the location of all Postfix
 # daemon programs (i.e. programs listed in the master.cf file). This
 # directory must be owned by root.
 #
-daemon_directory = /usr/local/libexec/postfix
+#daemon_directory = /usr/local/libexec/postfix
+daemon_directory = <%= @postfix_daemon_directory %>
 
 # The data_directory parameter specifies the location of Postfix-writable
 # data files (caches, random numbers). This directory must be owned
