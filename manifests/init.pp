@@ -324,8 +324,9 @@ class mailserver (
 	
 
 
+	
 
-	if "ldap" in $virtual_userdb  {
+	if "ldap" in $virtual_userdb  and $ldap {
 		$_virtual_ldap_mailbox_maps = "ldap:$postfix_dir/ldap_vmbox_maps.cf"
 
 		if $virtual_mailbox_format == "maildir"{

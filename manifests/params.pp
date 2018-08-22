@@ -7,7 +7,7 @@ class mailserver::params {
 
 			$etcdir = "/usr/local/etc"
 
-			$postfix_command_direcory = '/usr/local/sbin'
+			$postfix_command_directory = '/usr/local/sbin'
                         $postfix_pkg = 'postfix'
 			$postfix_pkg_provider = 'portsng'
 			$postfix_main_cf = '/usr/local/etc/postfix/main.cf'
