@@ -728,6 +728,8 @@ non_smtpd_milters = <%= @non_smtpd_milters %>
 
 mailbox_size_limit = <%= @mailbox_size_limit %>
 
+message_size_limit = <%= @message_size_limit %>
+
 
 
 recipient_delimiter = +
@@ -768,3 +770,6 @@ recipient_canonical_classes= envelope_recipient,header_recipient
 <% if @default_destination_rate_delay %>
 default_destination_rate_delay=<%= @default_destination_rate_delay %>
 <% end %>
+
+
+smtp_tls_security_level = may

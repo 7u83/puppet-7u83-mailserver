@@ -160,7 +160,7 @@ class mailserver (
 	#
 	# Sympa parameters
 	#
-	$sympa_db_host = false,
+	$sympa_db_host = undef,
 	$sympa_db_name = "sympa",
 	$sympa_db_user = "sympa",
 	$sympa_db_passwd = "sympa",
@@ -181,6 +181,7 @@ class mailserver (
 	$default_destination_rate_delay = "1s",
 
 	$mailbox_size_limit = 0,
+	$message_size_limit = 26214400,
 
 
 	$virtual_userdb = ["ldap"],
@@ -681,8 +682,13 @@ class mailserver (
 		class {"mailserver::sympa":
 			domain => $sympa_domain ? {
 					undef => $_myorigin,
-					default => $sympa_domain
-				},
+					default => $sympa_domain,
+			},
+				db_user => $sympa_db_user,
+				db_passwd => $sympa_db_passwd,
+				db_name =>  $sympa_db_name,
+				db_host => $sympa_db_host,
+
 
 			listmaster => $lists_listmaster,
 			web_url => $lists_web_url,
