@@ -5,6 +5,7 @@
 class mailserver::sympa
 (
 	$domain,
+	$stitle = undef,
 	$listmaster,
 	$web_url,
 
@@ -209,6 +210,7 @@ inherits mailserver::params
 			$web_location = $d[web_location]
 			$web_url = $d[web_url]
 			$http_host = $d[domain]
+			$stitle = $d[title]
 
 			nginx::resource::location {"sympa_web $domain":
 				ensure => present,	

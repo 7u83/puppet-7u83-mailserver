@@ -173,6 +173,7 @@ class mailserver (
 	$sympa_log_level = false,
 
 	$sympa_virtual_domains = [],
+	$sympa_title = undef,
 
 
 
@@ -690,7 +691,8 @@ class mailserver (
 			db_passwd => $sympa_db_passwd,
 			db_name =>  $sympa_db_name,
 			db_host => $sympa_db_host,
-
+			
+			stitle => $sympa_title,
 
 			listmaster => $lists_listmaster,
 			web_url => $lists_web_url,

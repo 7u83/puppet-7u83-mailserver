@@ -50,6 +50,10 @@ listmaster	<%= @listmaster %>
 ## The name of your mailing list service. It will appear in the header of web
 ## interface and subjects of several service messages.
 #title	Mailing lists service
+<% if @stitle %>
+title <%= @stitle %>
+<% end %>
+
 
 ## gecos
 ## Display name of Sympa
