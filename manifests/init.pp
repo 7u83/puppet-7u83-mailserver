@@ -172,6 +172,8 @@ class mailserver (
 	$sympa_domain = undef,
 	$sympa_log_level = false,
 
+	$sympa_virtual_domains = [],
+
 
 
 	$lists_listmaster = undef,
@@ -684,10 +686,10 @@ class mailserver (
 					undef => $_myorigin,
 					default => $sympa_domain,
 			},
-				db_user => $sympa_db_user,
-				db_passwd => $sympa_db_passwd,
-				db_name =>  $sympa_db_name,
-				db_host => $sympa_db_host,
+			db_user => $sympa_db_user,
+			db_passwd => $sympa_db_passwd,
+			db_name =>  $sympa_db_name,
+			db_host => $sympa_db_host,
 
 
 			listmaster => $lists_listmaster,
@@ -698,6 +700,7 @@ class mailserver (
 			localhost => $localhost,
 
 			virtual => $sympa_virtual,
+			virtual_domains => $sympa_virtual_domains,
 			dmarc_protection_mode => $lists_dmarc_protection_mode
 				
 

@@ -16,6 +16,7 @@ class mailserver::sympa
 	$db_host = undef,
 
 	$virtual = false,
+	$virtual_domains = [],
 	$log_level = undef,
 	$web_location = "/sympa",
 	$static_web_location = "/static-sympa",
@@ -49,6 +50,7 @@ inherits mailserver::params
 			$packages = ["p5-DBD-mysql","p5-CGI-Fast","mhonarc"]
 			
 			$sympa_dir = "/usr/local/etc/sympa"
+			$sympa_data_dir = '/usr/local/share/sympa/list_data'
 			$sympa_package = "sympa"
 			$sympa_service="sympa"
 			$sympa_fcgi_program="/usr/local/libexec/sympa/wwsympa.fcgi"
@@ -152,6 +154,8 @@ inherits mailserver::params
 		require => Package["$sympa_package"]
 	}
 
+	$http_host = $domain
+
 	file {"$sympa_conf":
 		ensure => file,
 		content => template("mailserver/sympa.conf.erb"),
@@ -179,19 +183,68 @@ inherits mailserver::params
 			ensure => present
 		}
 
-		nginx::resource::location {"sympa_web_location":
+		nginx::resource::location {"sympa_web_location $domain":
 			ensure => present,	
 			server => "sympa_web",
 			location => "$web_location",
 			fastcgi=>"unix:$sympa_fcgi_socket",
 			location_cfg_append => {
-				fastcgi_split_path_info => '^(/sympa)(.*)$',
+#				fastcgi_split_path_info => '^($web_location)(.*)$',
+				fastcgi_split_path_info => join ( ['^(', $web_location,')(.*)$'],''),
+
 			},
 			fastcgi_param => {
 				'SCRIPT_FILENAME' => "$sympa_fcgi_program",
 				'PATH_INFO' => '$fastcgi_path_info',
+				'SERVER_NAME' => $domain,
 			}
 		}
+
+
+
+		$virtual_domains.each | $d | {
+
+
+			$domain = $d[domain]
+			$web_location = $d[web_location]
+			$web_url = $d[web_url]
+			$http_host = $d[domain]
+
+			nginx::resource::location {"sympa_web $domain":
+				ensure => present,	
+				server => "sympa_web",
+				location => $d[web_location],
+				fastcgi=>"unix:$sympa_fcgi_socket",
+				location_cfg_append => {
+					fastcgi_split_path_info => join ( ['^(', $web_location,')(.*)$'],''),
+				},
+				fastcgi_param => {
+					'SCRIPT_FILENAME' => "$sympa_fcgi_program",
+					'PATH_INFO' => '$fastcgi_path_info',
+					'SERVER_NAME' => $d[domain],	
+				}
+			}
+
+			file {"$sympa_data_dir/$domain":
+				ensure => directory,
+				owner => sympa,
+			}
+
+			file {"$sympa_dir/$domain":
+				ensure => directory,
+				owner => sympa,
+			}
+			
+			file {"$sympa_dir/$domain/robot.conf":
+				ensure => present,
+				require => File["$sympa_dir/$domain"],
+				content => template("mailserver/sympa_robot.conf.erb"),
+			}
+
+		
+		}
+
+
 
 		nginx::resource::location {"sympa_static_location":
 			ensure => present,	

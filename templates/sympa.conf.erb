@@ -1,3 +1,7 @@
+#
+# managed by puppet
+#
+
 ###\\\\ Service description ////###
 
 ## domain
@@ -586,6 +590,10 @@ wwsympa_url <%= @web_url %>
 ## http_host
 ## URL prefix of WWSympa behind proxy
 #http_host	
+<% if @http_host %>
+http_host <%= @http_host %>
+<% end %>
+
 
 ## static_content_url
 ## URL for static contents
