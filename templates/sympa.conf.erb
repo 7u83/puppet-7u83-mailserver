@@ -60,6 +60,9 @@ title <%= @stitle %>
 ## This parameter is used for display name in the "From:" header field for the
 ## messages sent by Sympa itself.
 #gecos	SYMPA
+<% if @gecos %>
+gecos <%= @gecos %>
+<% end %>
 
 ## legacy_character_support_feature
 ## Support of legacy character set
@@ -887,4 +890,7 @@ static_content_path	<%= @sympa_static_dir %>
 ## Is FastCGI module for HTTP server installed? This module provides a much
 ## faster web interface.
 #use_fast_cgi	1
+<% if @logo_html_definition %>
+logo_html_definition	<%= @logo_html_definition %>
+<% end %>
 

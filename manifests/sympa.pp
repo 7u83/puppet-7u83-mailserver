@@ -18,9 +18,12 @@ class mailserver::sympa
 
 	$virtual = false,
 	$virtual_domains = [],
+	$gecos =  undef, 
 	$log_level = undef,
 	$web_location = "/sympa",
 	$static_web_location = "/static-sympa",
+
+	$logo_html_definition = false,
 
 	$mailserver = "postfix",
 	$fcgi_addr = false,

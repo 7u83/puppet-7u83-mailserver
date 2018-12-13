@@ -1,6 +1,16 @@
+# managed by puppet
 
 sympa@<%= @_sympa_domain %>		sympa:sympa@<%=@_sympa_domain%>
 listmaster@<%= @_sympa_domain %>	sympa:listmaster@<%=@_sympa_domain%>
 bounce@<%= @_sympa_domain %>	sympabounce:sympa@<%=@_sympa_domain%>
 abuse-feedback-report@<%= @_sympa_domain %> sympabounce:sympa@<%=@_sympa_domain%>
 
+
+<% @virtual_domains.each do |domain|  %>
+
+sympa@<%= domain['domain'] %>		sympa:sympa@<%=domain['domain']%>
+listmaster@<%= domain['domain'] %>	sympa:listmaster@<%=domain['domain'] %>
+bounce@<%= domain['domain'] %>	sympabounce:sympa@<%=domain['domain']%>
+abuse-feedback-report@<%= domain['domain'] %> sympabounce:sympa@<%=domain['domain']%>
+
+<% end %>

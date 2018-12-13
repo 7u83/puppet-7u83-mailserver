@@ -16,7 +16,7 @@
 # ----------
 #
 # Here you should define a list of variables that this module would require.
-#
+#"
 # * `sample variable`
 #  Explanation of how this variable affects the function of this class and if
 #  it has a default. e.g. "The parameter enc_ntp_servers must be set by the
@@ -88,7 +88,7 @@ class mailserver (
 #	$ldap_homedir_attribute,
 
 	
-
+	$transport_maps = '',
 
 #	$ldap_pass_filter="(&(objectClass=posixAccount)(uid=%u))",
 #	$ldap_user_filter="(&(objectClass=posixAccount)(uid=%u))",
@@ -174,8 +174,9 @@ class mailserver (
 
 	$sympa_virtual_domains = [],
 	$sympa_title = undef,
+	$sympa_gecos = undef, 
 
-
+	$sympa_logo_html_definition = false,
 
 	$lists_listmaster = undef,
 	$lists_web_url = undef,
@@ -274,7 +275,7 @@ class mailserver (
 
 ) inherits mailserver::params {
 
-
+	$_transport_maps = $transport_maps
 
 	# ----------------------------------------------------------------
 	# Basic setup
@@ -693,6 +694,8 @@ class mailserver (
 			db_host => $sympa_db_host,
 			
 			stitle => $sympa_title,
+			
+			logo_html_definition => $sympa_logo_html_definition,
 
 			listmaster => $lists_listmaster,
 			web_url => $lists_web_url,
@@ -703,8 +706,9 @@ class mailserver (
 
 			virtual => $sympa_virtual,
 			virtual_domains => $sympa_virtual_domains,
-			dmarc_protection_mode => $lists_dmarc_protection_mode
-				
+			dmarc_protection_mode => $lists_dmarc_protection_mode,
+	
+			gecos => $sympa_gecos,			
 
 		}
 

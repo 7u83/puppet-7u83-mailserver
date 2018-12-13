@@ -735,7 +735,7 @@ message_size_limit = <%= @message_size_limit %>
 recipient_delimiter = +
 unknown_local_recipient_reject_code = 550
 owner_request_special = no
-transport_maps = <%= @mailman_local_maps %> <%= @_virtual_sympa_mailbox_maps %>
+transport_maps = <%= @_transport_maps %> <%= @mailman_local_maps %> <%= @_virtual_sympa_mailbox_maps %>
 #address_verify_transport_maps = <%= @mailman_local_maps %>
 #
 <%-
