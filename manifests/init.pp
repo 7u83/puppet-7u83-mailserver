@@ -414,6 +414,7 @@ class mailserver (
 					["hash:$postfix_dir/vmboxes"],
 					$virtual_mailbox_maps.map|$elem|{ "hash:$aliasmaps_dir/$elem"},
 					["$_virtual_ldap_mailbox_maps"],
+					["$transport_maps"],
 				), " ")
 
 
