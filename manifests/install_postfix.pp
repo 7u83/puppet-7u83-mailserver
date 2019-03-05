@@ -2,6 +2,7 @@
 
 class mailserver::install_postfix(
 	$ldap = true,
+	$mysql = false,
 
 ) {
         case $::osfamily {
@@ -12,7 +13,8 @@ class mailserver::install_postfix(
 					provider => "portsng",
 					ensure => 'installed',
 					package_settings => {
-						'LDAP' => $ldap
+						'LDAP' => $ldap,
+						'MYSQL' => $mysql,
 					},
 					require => Package["portupgrade"]
 				}

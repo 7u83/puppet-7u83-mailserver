@@ -60,6 +60,11 @@ class mailserver (
 	$srs_exclude_domains = undef,
 
 	#
+	# MYSQL
+	#
+	$mysql = false,	
+
+	#
 	# LDAP
 	#
 
@@ -270,6 +275,7 @@ class mailserver (
 	$submission_milters = [],
 	$submission_mynetworks = [],
 
+	$extra_login_maps=[],
 
 
 
@@ -434,6 +440,18 @@ class mailserver (
 			
 		}
 
+		$extra_login_maps.each | String $file | {
+			mailserver::postfix_hashmap{"$file":
+				source => "puppet:///mail",
+				path => $aliasmaps_dir
+			}
+			
+		}
+#join( concat([], 
+
+		$_extra_login_maps = $extra_login_maps.map|$elem|{ "hash:$aliasmaps_dir/$elem"}
+#				), " ")
+
 
 
 	}
@@ -537,7 +555,8 @@ class mailserver (
 
 	if $dkim_selector != undef {
 		ensure_resource ("class","mailserver::install_postfix",{
-			ldap  => $ldap
+			ldap  => $ldap,
+			mysql => $mysql, 
 		})
 		if $dkim_domains == undef {
 			$_dkim_domains = "*"  #$myorigin
@@ -660,7 +679,7 @@ class mailserver (
 			$sender_login_maps = []
 		}
 		class {"mailserver::submission":
-			sender_login_maps =>  concat ($sender_login_maps, $sender_passwd_login_maps, $_virtual_alias_maps),
+			sender_login_maps =>  concat ( $_extra_login_maps, $sender_login_maps, $sender_passwd_login_maps, $_virtual_alias_maps),
 			verify_recipient => $submission_verify_recipient,
 			rbls => $submission_rbls,
 			client_restrictions => $submission_client_restrictions,
