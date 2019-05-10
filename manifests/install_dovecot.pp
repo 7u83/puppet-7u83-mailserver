@@ -7,6 +7,8 @@ class mailserver::install_dovecot(
 	$listen = "",
 	$mail_location, 
 
+	$mysql = false,
+
 	$ldap = false,
 	$ldap_auth_bind,
 	$ldap_base,
@@ -52,7 +54,8 @@ class mailserver::install_dovecot(
 				package_settings => {
 					'LDAP' => $ldap,
 					'SOLR' => $solr,
-					'LUCENE' => $lucene
+					'LUCENE' => $lucene,
+					'MYSQL' => $mysql,
 				},
 				require => Package["portupgrade"]
 			}

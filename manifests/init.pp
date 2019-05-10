@@ -63,6 +63,13 @@ class mailserver (
 	# MYSQL
 	#
 	$mysql = false,	
+	$mysql_mail_search = "",
+
+	$mysql_server = "",
+	$mysql_user = "",
+	$mysql_db = "",
+	$mysql_password = "",
+	
 
 	#
 	# LDAP
@@ -193,7 +200,7 @@ class mailserver (
 	$message_size_limit = 26214400,
 
 
-	$virtual_userdb = ["ldap"],
+	$virtual_userdb = ["ldap","mysql"],
 
 	$virtual_mailbox_domains = [],
 	$virtual_mailbox_base = "/mail",
@@ -335,6 +342,28 @@ class mailserver (
 	
 
 
+	if "mysql" in $virtual_userdb  and $mysql {
+		$_virtual_mysql_mailbox_maps = "mysql:$postfix_dir/mysql_vmbox_maps.cf"
+		mailserver::postfix_mysqlmap{ "mysql_vmbox_maps.cf":
+			dbuser => $mysql_user,	
+			password => $mysql_password,
+			dbname => $mysql_db,
+			server => $mysql_server,
+			query => $mysql_mail_search,
+		}
+		$_virtual_mysql_alias_maps = ["mysql:$postfix_dir/mysql_valias_maps.cf"]
+
+		mailserver::postfix_mysqlmap{ "mysql_valias_maps.cf":
+			dbuser => $mysql_user,	
+			password => $mysql_password,
+			dbname => $mysql_db,
+			server => $mysql_server,
+			query => $mysql_mail_search,
+		}
+	}
+	else {
+		$_virtual_mysql_alias_maps = []
+	}
 	
 
 	if "ldap" in $virtual_userdb  and $ldap {
@@ -412,6 +441,7 @@ class mailserver (
 		$_virtual_alias_maps = join( concat( 
 					["hash:$postfix_dir/valiases"],
 					$virtual_alias_maps.map|$elem|{ "hash:$aliasmaps_dir/$elem"},
+					$_virtual_mysql_alias_maps,
 					$_virtual_ldap_alias_maps			
 				), " ")
 
@@ -419,6 +449,7 @@ class mailserver (
 		$_virtual_mailbox_maps = join( concat( 
 					["hash:$postfix_dir/vmboxes"],
 					$virtual_mailbox_maps.map|$elem|{ "hash:$aliasmaps_dir/$elem"},
+					["$_virtual_mysql_mailbox_maps"],
 					["$_virtual_ldap_mailbox_maps"],
 					["$transport_maps"],
 				), " ")
@@ -793,6 +824,7 @@ class mailserver (
 
 	class {"mailserver::install_dovecot":
 		local_userdb => $local_userdb,
+		mysql=>$mysql,
 
 		ldap=>$ldap,
 		ldap_base => $ldap_base,
@@ -1029,6 +1061,27 @@ define mailserver::service(
 	}	
 }
 
+
+
+
+define mailserver::postfix_mysqlmap(
+	$query,
+	$server,
+	$password,
+	$dbuser,
+	$dbname,
+){
+	file {"$::mailserver::params::postfix_dir/$title":
+		ensure => present,
+		notify => Service["$::mailserver::params::postfix_service"],
+		content => "hosts = $server
+dbname = $dbname
+user = $dbuser
+password = $password
+query = $query
+"
+	}
+}
 
 define mailserver::postfix_ldapmap(
 	$query_filter,
