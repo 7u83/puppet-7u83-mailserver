@@ -8,6 +8,8 @@ class mailserver::install_dovecot(
 	$mail_location, 
 
 	$mysql = false,
+	$mysql_user_query = "",
+	$mysql_password_query = "",
 
 	$ldap = false,
 	$ldap_auth_bind,
@@ -133,6 +135,17 @@ class mailserver::install_dovecot(
 		creates => "$dovecot_cfgbasedir/dh.pem",
 		require => File["$dovecot_cfgbasedir"],
 	}
+
+
+	if $mysql {
+		file { "$dovecot_cfgbasedir/dovecot-sql.conf.ext":
+			ensure => file,
+			content => template('mailserver/dovecot/dovecot-sql.conf.ext.erb'),
+			require => File["$dovecot_cfgbasedir"],
+		}
+	}
+
+
 
 }
 

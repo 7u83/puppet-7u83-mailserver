@@ -773,3 +773,6 @@ default_destination_rate_delay=<%= @default_destination_rate_delay %>
 
 
 smtp_tls_security_level = may
+
+smtpd_sasl_authenticated_header = yes
+smtp_header_checks = pcre:/usr/local/etc/postfix/header_checks

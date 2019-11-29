@@ -29,7 +29,8 @@
 # );
 
 # Database driver: mysql, pgsql, sqlite
-#driver = 
+driver = mysql
+ 
 
 # Database connection string. This is driver-specific setting.
 #
@@ -72,6 +73,7 @@
 #   connect = /etc/dovecot/authdb.sqlite
 #
 #connect =
+connect = host=10.0.6.7 dbname=nuserver user=nuserver password=
 
 # Default password scheme.
 #

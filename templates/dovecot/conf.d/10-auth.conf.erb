@@ -129,7 +129,9 @@ auth_mechanisms = login plain
 !include auth-system.conf.ext
 <%- end -%>
 
-#!include auth-sql.conf.ext
+<%- if @mysql %>
+!include auth-sql.conf.ext
+<%- end %>
 <%- if @ldap -%>
 !include auth-ldap.conf.ext
 <%- end -%>

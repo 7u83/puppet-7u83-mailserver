@@ -65,6 +65,10 @@ class mailserver (
 	$mysql = false,	
 	$mysql_mail_search = "",
 
+	$mysql_password_query = "",
+	$mysql_user_query = "",
+	$mysql_login_maps_query ="",
+
 	$mysql_server = "",
 	$mysql_user = "",
 	$mysql_db = "",
@@ -360,9 +364,21 @@ class mailserver (
 			server => $mysql_server,
 			query => $mysql_mail_search,
 		}
+
+		$_mysql_login_maps = ["mysql:$postfix_dir/mysql_login_maps.cf"]
+		mailserver::postfix_mysqlmap{ "mysql_login_maps.cf":
+			dbuser => $mysql_user,	
+			password => $mysql_password,
+			dbname => $mysql_db,
+			server => $mysql_server,
+			query => $mysql_login_maps_query,
+		}
+
+
 	}
 	else {
 		$_virtual_mysql_alias_maps = []
+		$_mysql_login_maps = []
 	}
 	
 
@@ -710,7 +726,7 @@ class mailserver (
 			$sender_login_maps = []
 		}
 		class {"mailserver::submission":
-			sender_login_maps =>  concat ( $_extra_login_maps, $sender_login_maps, $sender_passwd_login_maps, $_virtual_alias_maps),
+			sender_login_maps =>  concat ( $_extra_login_maps, $sender_login_maps, $sender_passwd_login_maps, $_mysql_login_maps), #$_virtual_alias_maps),
 			verify_recipient => $submission_verify_recipient,
 			rbls => $submission_rbls,
 			client_restrictions => $submission_client_restrictions,
@@ -825,6 +841,8 @@ class mailserver (
 	class {"mailserver::install_dovecot":
 		local_userdb => $local_userdb,
 		mysql=>$mysql,
+		mysql_user_query => $mysql_user_query,
+		mysql_password_query => $mysql_password_query,
 
 		ldap=>$ldap,
 		ldap_base => $ldap_base,
@@ -901,7 +919,18 @@ class mailserver (
 	}
 
 
+	file {"/usr/local/etc/postfix/header_checks":
+		ensure => present,
+		content => "/^Received: .*\(Authenticated sender:.*/ IGNORE
+/^Received: by mailing\.wikimedia\.de .*from userid [0-9]+\)/ IGNORE
+/^User-Agent:/ IGNORE
+/^X-Originating-IP:/ IGNORE
+",
+		require => [
+			Class["mailserver::install_postfix"]
+		]
 
+	}
 
 	service { "$postfix_service":
 		ensure => running,
@@ -1219,6 +1248,10 @@ class mailserver::mx(
 			"{ -o smtpd_relay_restrictions = $pfrelay_restrictions }",
 			"{ -o smtpd_milters = $pflmilters $pfmilters}",
 			"{ -o smtpd_sasl_auth_enable = no }",
+		        "{ -o smtpd_tls_mandatory_ciphers = high}",
+			"{ -o tls_ssl_options = 0x40000000}",
+		        "{ -o tls_preempt_cipherlist = yes}",
+		        "{ -o smtpd_tls_eecdh_grade = ultra}",
 			"$ssl_options",
 		]
 
@@ -1285,7 +1318,7 @@ class mailserver::submission(
 
 	$sender_login_maps = [],
 
-
+	$smtps=false,
 
 )inherits mailserver{
 
@@ -1299,6 +1332,14 @@ class mailserver::submission(
 			concat($recipient_restrictions,$_reject_unverified_recipient),
 			" ")
 
+	if $smtps {
+		$subservice = "smtps"
+		$wrapper_mode = "yes"
+	}
+	else {
+		$subservice = "submission"
+		$wrapper_mode = "no"
+	}
 
 
 	$pfhelo_restrictions = join($helo_restrictions, " ")
@@ -1321,19 +1362,26 @@ class mailserver::submission(
 
 	if $tls_security != false {
 		$ssl_options ="{ -o smtpd_tls_security_level = $tls_security }
-	{ -o smtp_tls_note_starttls_offer = yes }
 	{ -o smtpd_tls_key_file = $kf }
 	{ -o smtpd_tls_cert_file = $::mailserver::_smtpd_sslcert }
 	{ -o smtpd_tls_loglevel = 1 }
 	{ -o smtpd_tls_received_header = yes }
-	{ -o smtpd_tls_session_cache_timeout = 3600s }"
+	{ -o smtpd_tls_session_cache_timeout = 3600s }
+        { -o smtpd_tls_mandatory_ciphers = high}
+	{ -o tls_ssl_options = 0x40000000}
+        { -o tls_preempt_cipherlist = yes}
+        { -o smtpd_tls_eecdh_grade = ultra}
+	{ -o smtpd_tls_auth_only = yes }"
+
+	$offer_start_tls = "{ -o smtp_tls_note_starttls_offer = yes }"
+	$tls_wrapper = "{ -o smtpd_tls_wrappermode=yes }"
 	}
 	else{
 		$ssl_options = ""
 	}
 
 	mailserver::service{ "Postfix Subimission":
-		service => 'submission',
+		service => "submission",
 		command => 'smtpd',
 		args => [
 			"{ -o smtpd_sender_restrictions = $pfsender_restrictions }",
@@ -1347,8 +1395,29 @@ class mailserver::submission(
 			"{ -o smtpd_sasl_path = /var/spool/postfix/private/auth }",
 			"{ -o smtpd_sender_login_maps = $_sender_login_maps }",
 			"$ssl_options",
+			"$offer_start_tls",
 		]
 	}
+
+	mailserver::service{ "Postfix SMTPS":
+		service => "smtps",
+		command => 'smtpd',
+		args => [
+			"{ -o smtpd_sender_restrictions = $pfsender_restrictions }",
+			"{ -o smtpd_recipient_restrictions = $pfrecipient_restrictions }",
+			"{ -o smtpd_client_restrictions = $pfclient_restrictions }",
+			"{ -o smtpd_helo_restrictions = $pfhelo_restrictions }",
+			"{ -o smtpd_relay_restrictions = $pfrelay_restrictions }",
+			"{ -o smtpd_milters = $pflmilters $pfmilters}",
+			"{ -o smtpd_sasl_auth_enable = yes }",
+			"{ -o smtpd_sasl_type = dovecot }",
+			"{ -o smtpd_sasl_path = /var/spool/postfix/private/auth }",
+			"{ -o smtpd_sender_login_maps = $_sender_login_maps }",
+			"$ssl_options",
+			"$tls_wrapper",
+		]
+	}
+
 }
 
 
