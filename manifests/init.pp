@@ -46,7 +46,7 @@ class mailserver (
 	#
 	# general
 	#
-	$myhostname,
+	$myhostname = "localhost",
 	$mydestination = undef,
 	$myorigin = undef,
 
@@ -502,6 +502,9 @@ class mailserver (
 
 
 	}
+	else{
+		$_extra_login_maps = []
+	}
 
 	
 	# ----------------------------------------------------------------
@@ -725,8 +728,10 @@ class mailserver (
 		else {
 			$sender_login_maps = []
 		}
+
+
 		class {"mailserver::submission":
-			sender_login_maps =>  concat ( $_extra_login_maps, $sender_login_maps, $sender_passwd_login_maps, $_mysql_login_maps), #$_virtual_alias_maps),
+			sender_login_maps => concat ( $_extra_login_maps, $sender_login_maps, $sender_passwd_login_maps, $_mysql_login_maps), #$_virtual_alias_maps),
 			verify_recipient => $submission_verify_recipient,
 			rbls => $submission_rbls,
 			client_restrictions => $submission_client_restrictions,
@@ -819,7 +824,7 @@ class mailserver (
 	}
 
 	$non_smtpd_milters = join([
-		$clamav_milter_sock,
+		$::mailserver::clamav::milter_sock,
 		$::mailserver::opendkim::milter_sock,
 		
 	]," ")
@@ -833,7 +838,7 @@ class mailserver (
 		ldap  => $ldap
 	})
 
-	class {"mailserver::install_clamav":
+	class {"mailserver::clamav":
 		ldap => $ldap
 	}
 
@@ -877,7 +882,7 @@ class mailserver (
 	file { "$clamav_milter_conf":
 		ensure => present,
 		content => template("mailserver/clamav-milter.conf.erb"),
-		require => Class["mailserver::install_clamav"]
+		require => Class["mailserver::clamav"]
 	}
 
 	exec {"$clamav_freshclam":
@@ -888,7 +893,7 @@ class mailserver (
 	service {"$clamav_clamd_service":
 		ensure => running,
 		require => [
-			Class["mailserver::install_clamav"],
+			Class["mailserver::clamav"],
 			Exec["$clamav_freshclam"],
 		]
 	}
@@ -943,7 +948,7 @@ class mailserver (
 		ensure => present,
 		require => [
 			Class["mailserver::install_postfix"],
-			Class["mailserver::install_clamav"]
+			Class["mailserver::clamav"]
 		]
 	}
 
@@ -1190,7 +1195,7 @@ class mailserver::mx(
 	$pflmilters = join([
 		$rspamd_milter_socket,
 #		$dmarc_milter_socket,
-		$clamav_milter_sock,
+		$mailserver::clamav::milter_sock,
 #		$opendkim_milter_sock,
 	]," ")
 
@@ -1351,7 +1356,7 @@ class mailserver::submission(
 
 	$pflmilters = join([
 		$rspamd_milter_socket,
-		$clamav_milter_sock,
+		$mailserver::clamav::milter_sock,
 		$mailserver::opendkim::milter_sock,
 	]," ")
 
