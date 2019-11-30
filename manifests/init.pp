@@ -879,28 +879,6 @@ class mailserver (
 		protocols => $dovecot_services,
 	}
 
-	file { "$clamav_milter_conf":
-		ensure => present,
-		content => template("mailserver/clamav-milter.conf.erb"),
-		require => Class["mailserver::clamav"]
-	}
-
-
-	service {"$clamav_clamd_service":
-		ensure => running,
-		require => [
-			Class["mailserver::clamav"],
-			Exec["$clamav_freshclam"],
-		]
-	}
-
-	service {"$clamav_milter_service":
-		ensure => running,
-		require => [
-			Service["$clamav_clamd_service"]
-		],
-		subscribe => File["$clamav_milter_conf"],
-	}
 
 
 	file { "$postfix_main_cf":

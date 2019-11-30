@@ -17,7 +17,7 @@
 # inet6:port@[hostname|ip-address] - to specify an ipv6 socket
 #
 # Default: no default
-MilterSocket <%= @clamav_milter_sock %>
+MilterSocket <%= @milter_sock %>
 #/var/run/clamav/clmilter.sock
 
 #MilterSocket inet:7357
@@ -166,7 +166,7 @@ ClamdSocket unix:/var/run/clamav/clamd.sock
 # Action to be performed on infected messages
 # Default: Quarantine
 #OnInfected Quarantine
-OnInfected <%= @clamav_infected_action %>
+OnInfected <%= @oninfected %>
 
 # Action to be performed on error conditions (this includes failure to
 # allocate data structures, no scanners available, network timeouts,

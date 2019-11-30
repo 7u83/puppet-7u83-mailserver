@@ -5,10 +5,14 @@ class mailserver::clamav::params {
 
         case $::osfamily {
                 'FreeBSD':{
+			$packages = "clamav"
+
 			$milter_sock="unix:/var/run/clamav/clmilter.sock"
 			$milter_conf="/usr/local/etc/clamav-milter.conf"
+			$milter_service="clamav-milter"
+
 			$clamd_conf="/usr/local/etc/clamd.conf"
-			$packages = "clamav"
+			$clamd_service="clamav-clamd"
 
 			$freshclam_service="clamav-freshclam"
 			$freshclam="/usr/local/bin/freshclam"
@@ -25,6 +29,7 @@ class mailserver::clamav::params {
 
 class mailserver::clamav(
 	$ldap = true,
+	$oninfected = "Reject",
 	$packages = $::mailserver::clamav::params::packages,
 	$freshclam_receivetimeout = $::mailserver::clamav::params::freshclam_receivetimeout,
 	$ensure = 'installed',
@@ -48,6 +53,27 @@ class mailserver::clamav(
 		require => [
 			Exec["$freshclam"]
 		], 
+	}
+
+	file { "$milter_conf":
+		ensure => present,
+		content => template("mailserver/clamav-milter.conf.erb"),
+		require => Package[$packages]
+	} ->
+	service {"$milter_service":
+		ensure => running,
+		require => [
+			Service["$clamd_service"]
+		],
+		subscribe => File["$milter_conf"],
+	}
+
+
+	service {"$clamd_service":
+		ensure => running,
+		require => [
+			Exec["$freshclam"],
+		]
 	}
 }
 

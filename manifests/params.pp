@@ -30,15 +30,16 @@ class mailserver::params {
 			$alias_maps = 'hash:/etc/mail/aliases'
 
 
-			$clamav_milter_sock="unix:/var/run/clamav/clmilter.sock"
-			$clamav_milter_conf="/usr/local/etc/clamav-milter.conf"
-			$clamav_clamd_conf="/usr/local/etc/clamd.conf"
+#			$clamav_milter_sock="unix:/var/run/clamav/clmilter.sock"
+#			$clamav_milter_conf="/usr/local/etc/clamav-milter.conf"
+#			$clamav_clamd_conf="/usr/local/etc/clamd.conf"
 
-			$clamav_milter_service="clamav-milter"
-			$clamav_clamd_service="clamav-clamd"
-			$clamav_freshclam_service="clamav-freshclam"
-			$clamav_freshclam="/usr/local/bin/freshclam"
-			$clamav_freshclam_file="/var/db/clamav/main.cvd"
+#			$clamav_milter_service="clamav-milter"
+#			$clamav_clamd_service="clamav-clamd"
+
+#			$clamav_freshclam_service="clamav-freshclam"
+#			$clamav_freshclam="/usr/local/bin/freshclam"
+#			$clamav_freshclam_file="/var/db/clamav/main.cvd"
 
 			package { "portupgrade":
 				ensure => installed
