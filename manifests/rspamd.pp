@@ -25,7 +25,7 @@ class mailserver::rspamd(
 			}
 
 		}
-		default: {
+		'Debian': {
 
 
 			$pkg = "rspamd"
@@ -36,10 +36,9 @@ class mailserver::rspamd(
 			apt::source {"rspamd_source":
 				location =>  "http://rspamd.com/apt-stable/",
 				repos => 'main',
-				release => 'xenial',
 				key => {
 					id => "3FA347D5E599BE4595CA2576FFA232EDBF21E25E",
-					server => "pgp.mit.edu",
+					server => "keys.gnupg.net",
 				},
 				include => {
 					'src' => true,
@@ -66,7 +65,8 @@ class mailserver::rspamd(
 
 
 	file {"$local_dir":
-		ensure => directory
+		ensure => directory,
+		require => Package[$pkg]
 	}
 
 	class {"mailserver::rspamd::update_cfgfiles":}
