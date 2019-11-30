@@ -885,11 +885,7 @@ class mailserver (
 		require => Class["mailserver::clamav"]
 	}
 
-	exec {"$clamav_freshclam":
-		creates => "$clamav_freshclam_file",
-		timeout => 600,
-	}
-	
+
 	service {"$clamav_clamd_service":
 		ensure => running,
 		require => [
@@ -897,14 +893,6 @@ class mailserver (
 			Exec["$clamav_freshclam"],
 		]
 	}
-
-	service {"$clamav_freshclam_service":
-		ensure => running,
-		require => [
-			Service["$clamav_clamd_service"]
-		], 
-	}
-
 
 	service {"$clamav_milter_service":
 		ensure => running,
