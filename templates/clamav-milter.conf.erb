@@ -92,8 +92,7 @@ PidFile /var/run/clamav/clamav-milter.pid
 # with the same socket: clamd servers will be selected in a round-robin fashion.
 #
 # Default: no default
-ClamdSocket unix:/var/run/clamav/clamd.sock
-
+ClamdSocket <%= @clamd_sock %>
 
 ##
 ## Exclusions

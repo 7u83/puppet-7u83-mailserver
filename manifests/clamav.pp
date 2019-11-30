@@ -13,17 +13,44 @@ class mailserver::clamav::params {
 
 			$clamd_conf="/usr/local/etc/clamd.conf"
 			$clamd_service="clamav-clamd"
+			$clamd_sock="unix:/var/run/clamav/clamd.sock"
 
 			$freshclam_service="clamav-freshclam"
 			$freshclam="/usr/local/bin/freshclam"
 			$freshclam_file="/var/db/clamav/main.cvd"
 			$freshclam_conf="/usr/local/etc/freshclam.conf"
-			$freshclam_receivetimeout=300
+			$db_dir = "/var/db/clamav"
+		}
+		'Debian':{
+       			$packages = ["clamav-milter","clamav-daemon"]
+
+			$milter_sock="/var/run/clamav/clamav-milter.ctl"
+			$milter_conf="/usr/local/etc/clamav-milter.conf"
+			$milter_service="clamav-milter"
+
+			$clamd_conf="/etc/clamav/clamd.conf"
+			$clamd_service="clamav-daemon"
+			$clamd_sock="unix:/var/run/clamav/clamd.ctl"
+
+			$freshclam_service="clamav-freshclam"
+			$freshclam="/usr/bin/freshclam"
+			$freshclam_file="/var/lib/clamav/main.cvd"
+			$freshclam_conf="/etc/clamav/freshclam.conf"
+			$db_dir = "/var/lib/clamav"
+
 		}
 		default: {
        			$packages = "clamav-milter"
+
+#			$freshclam_service="clamav-freshclam"
+#			$freshclam="/usr/local/bin/freshclam"
+#			$freshclam_file="/var/db/clamav/main.cvd"
+#			$freshclam_conf="/usr/local/etc/freshclam.conf"
+
+
 		}
 	}
+			$freshclam_receivetimeout=300
 
 }
 
