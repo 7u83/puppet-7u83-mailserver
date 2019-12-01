@@ -604,7 +604,7 @@ class mailserver (
 	#
 
 	if $dkim_selector != undef {
-		ensure_resource ("class","mailserver::install_postfix",{
+		ensure_resource ("class","mailserver::postfix",{
 			ldap  => $ldap,
 			mysql => $mysql, 
 		})
@@ -625,7 +625,7 @@ class mailserver (
 		service {"$::mailserver::opendkim::service":
 			ensure => "running",
 			subscribe => Class["mailserver::opendkim"],
-			require => Class["mailserver::install_postfix"],
+			require => Class["mailserver::postfix"],
 		}
 
 	}
@@ -635,7 +635,7 @@ class mailserver (
 	# DMARC Setup
 	#
 
-	Class["mailserver::opendmarc"] -> Class["::mailserver::install_postfix"]
+	Class["mailserver::opendmarc"] -> Class["::mailserver::postfix"]
 	
 	class {"mailserver::opendmarc":
 		umask => "0111",
@@ -678,7 +678,7 @@ class mailserver (
 		file { "$passwd_login_maps":
 			ensure => present,
 			content => '/^(.*?):\*/     $1',
-			require => Class["mailserver::install_postfix"],
+			require => Class["mailserver::postfix"],
 			notify => Service["$postfix_service"],
 		}
 		$sender_passwd_login_maps = 'pipemap:{proxy:unix:passwd.byname,pcre:/usr/local/etc/postfix/passwd_login_maps.cf}'
@@ -696,7 +696,7 @@ class mailserver (
 	#
 
 	if "smtp" in $services {
-		ensure_resource ("class","mailserver::install_postfix",{
+		ensure_resource ("class","mailserver::postfix",{
 			ldap  => $ldap
 		})
 
@@ -717,7 +717,7 @@ class mailserver (
 	# Suubmission Server
 	#
 	if "submission" in $services {	
-		ensure_resource ("class","mailserver::install_postfix",{
+		ensure_resource ("class","mailserver::postfix",{
 			ldap  => $ldap
 		})
 		if $ldap {
@@ -834,7 +834,7 @@ class mailserver (
 #	class {"mailserver::install_postfix":
 #		ldap => $ldap
 #	}
-	ensure_resource ("class","mailserver::install_postfix",{
+	ensure_resource ("class","mailserver::postfix",{
 		ldap  => $ldap
 	})
 
@@ -885,7 +885,7 @@ class mailserver (
 		ensure => present,
 		content => template("mailserver/postfix-main.conf.erb"),
 		require => [
-			Class["mailserver::install_postfix"]
+			Class["mailserver::postfix"]
 		]
 	}
 
@@ -898,7 +898,7 @@ class mailserver (
 /^X-Originating-IP:/ IGNORE
 ",
 		require => [
-			Class["mailserver::install_postfix"]
+			Class["mailserver::postfix"]
 		]
 
 	}
@@ -913,7 +913,7 @@ class mailserver (
 	concat { "$postfix_master_cf": 
 		ensure => present,
 		require => [
-			Class["mailserver::install_postfix"],
+			Class["mailserver::postfix"],
 			Class["mailserver::clamav"]
 		]
 	}
