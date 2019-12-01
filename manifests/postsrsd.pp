@@ -29,11 +29,9 @@ class mailserver::postsrsd(
 				ensure => "$xdomains_arg"
 			}
 		}
-		default: {
+		'Debian': {
 			$pkg = "postsrsd"
 			$service = "postsrsd"
-
-			
 		}
 
 
