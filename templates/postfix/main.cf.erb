@@ -1,3 +1,6 @@
+# DO NOT EDIT
+# This file is managed by Puppet
+
 # Global Postfix configuration file. This file lists only a subset
 # of all parameters. For the syntax, and for a complete parameter
 # list, see the postconf(5) manual page (command: "man 5 postconf").
@@ -53,20 +56,20 @@ queue_directory = /var/spool/postfix
 # postXXX commands.
 #
 #command_directory = /usr/local/sbin
-command_directory = <%= @postfix_command_directory %>
+command_directory = <%= @command_directory %>
 
 # The daemon_directory parameter specifies the location of all Postfix
 # daemon programs (i.e. programs listed in the master.cf file). This
 # directory must be owned by root.
 #
 #daemon_directory = /usr/local/libexec/postfix
-daemon_directory = <%= @postfix_daemon_directory %>
+daemon_directory = <%= @daemon_directory %>
 
 # The data_directory parameter specifies the location of Postfix-writable
 # data files (caches, random numbers). This directory must be owned
 # by the mail_owner account (see below).
 #
-data_directory = /var/db/postfix
+data_directory = <%= @data_directory %> 
 
 # QUEUE AND PROCESS OWNERSHIP
 #
@@ -77,7 +80,7 @@ data_directory = /var/db/postfix
 # particular, don't specify nobody or daemon. PLEASE USE A DEDICATED
 # USER.
 #
-mail_owner = postfix
+mail_owner = <%= @mail_owner %>
 
 # The default_privs parameter specifies the default rights used by
 # the local delivery agent for delivery to external file or command.
@@ -682,7 +685,7 @@ mailq_path = /usr/local/bin/mailq
 # is not shared with other accounts, not even with the Postfix account.
 #
 #setgid_group = maildrop
-setgid_group = <%= @postfix_maildrop_gid %>
+setgid_group = <%= @setgid_group %>
 
 # html_directory: The location of the Postfix HTML documentation.
 #

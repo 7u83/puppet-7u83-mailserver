@@ -1,6 +1,30 @@
+#
 #postfix
 #
 class mailserver::postfix::params(){
+        case $::osfamily {
+                'FreeBSD':{
+			$cfg_dir = "/usr/local/etc/postfix"
+			$service = 'postfix'
+			$command_directory = "/usr/local/sbin"
+			$daemon_directory = "/usr/local/libexec/postfix"
+			$data_directory = "/var/db/postfix"
+			$mail_owner = 'postfix'
+			$setgid_group = 'maildrop'
+		}
+		'Debian':{
+			$cfg_dir = "/etc/postfix"
+			$service = 'postfix'
+			$command_directory = "/usr/sbin"
+			$daemon_directory = "/usr/lib/postfix/sbin"
+			$data_directory = "/var/lib/postfix"
+			$mail_owner = 'postfix'
+			$setgid_group = 'postdrop'
+		}
+	}
+
+	$master_cf = "$cfg_dir/master.cf"
+	$main_cf = "$cfg_dir/main.cf"
 
 }
 
@@ -11,7 +35,31 @@ class mailserver::postfix(
 	$mysql = false,
 	$pgsql = false,
 
+	$local_userdb = ["passwd"],
+	$message_size_limit = 20000000,
+	$mailbox_size_limit = 0,
+
+	$ensure = present,
+	$version = installed,
+
+
+	$myhostname = $trusted['hostname']
+
 ) inherits ::mailserver::postfix::params{
+
+	case $ensure {
+		present:{
+			$ensure_version = $version
+			$ensure_file = file
+			$ensure_service = running
+		}
+		absent: {
+			$ensure_version = absent
+			$ensure_file = absent
+			$ensure_service = stopped
+		}
+	}
+
 
         case $::osfamily {
                 'FreeBSD':{
@@ -34,33 +82,34 @@ class mailserver::postfix(
 			package { $packages:
 				provider => $package_provider,
 				package_settings => $package_settings,
-				ensure => installed,
+				ensure => $ensure_version,
 				require => $package_require
 			} ->
 			file {"/usr/local/etc/mail/mailer.conf":
-				ensure => present,
-				content => template("mailserver/mailer.conf.erb")
+				ensure => $ensure_file,
+				content => template("mailserver/mailer.conf.erb"),
+				require => File["/usr/local/etc/mail"],
 			}
 		}
 		'Debian': {
 
                         $packages = "postfix"
 			package {"postfix":
-                                ensure => 'installed'
+                                ensure => $ensure_version
                         }
                         if $ldap {
                                 package {'postfix-ldap':
-                                        ensure => 'installed'
+                                        ensure => $ensure_version 
                                 }
                         }
 			if $mysql {
                                 package {'postfix-mysql':
-                                        ensure => 'installed'
+                                        ensure => $ensure_version
                                 }
 			}
 			if $pgsql {
                                 package {'postfix-pgsql':
-                                        ensure => 'installed'
+                                        ensure => $ensure_version
                                 }
 			}
 #                        package {"maildrop":
@@ -71,4 +120,57 @@ class mailserver::postfix(
 		}
 	}
 
+
+
+	concat { "$master_cf": 
+		ensure => $ensure,
+		require => [
+			Package[$apckages]
+#			Class["mailserver::postfix"],
+#			Class["mailserver::clamav"]
+		]
+	}
+
+	concat::fragment { "$master_cf header":
+		target => "$master_cf",
+		order => '00',
+		content => template('mailserver/postfix/master.cf.header.erb'),
+	}
+
+	if $ensure != absent {
+		service { "$service":
+			ensure => $ensure_service,
+			require => Concat["$master_cf"],
+			subscribe => [Concat["$master_cf"]], 
+		}
+	}
+
+	file { "$main_cf":
+		ensure => $ensure,
+		content => template("mailserver/postfix/main.cf.erb"),
+		require => [
+			Package[$packages]
+		]
+	}
+
+
 }
+
+define mailserver::postfix::service(
+	$service,
+	$type = 'inet',
+	$private = 'n',
+	$unpriv = '-',
+	$chroot = 'n',
+	$wakeup = '-',
+	$maxproc = '-',
+	$command, 
+	$args = [],
+){
+	concat::fragment  { "$title":
+		target => "$::mailserver::postfix::params::master_cf",
+		content => template("mailserver/postfix-master-service.conf.erb");
+	}	
+}
+
+
