@@ -50,7 +50,9 @@ class mailserver::sendmail::params(){
 
 class mailserver::sendmail(
 
-	$myhostname = $trusted['hostname']
+	$myhostname = $trusted['hostname'],
+	$myorigin = $myhostname,
+	$mydestination = [$myhostname],
 
 )
 inherits mailserver::sendmail::params
@@ -90,7 +92,11 @@ inherits mailserver::sendmail::params
 		notify => Service[$service],
 	}
 
-
+	file{$local_host_names:
+		ensure => file,
+		content => template("mailserver/sendmail/local-host-names.erb"),
+		notify => Service[$service],
+	}
 
 }
 

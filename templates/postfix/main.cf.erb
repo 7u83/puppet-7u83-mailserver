@@ -125,8 +125,8 @@ myhostname = <%= @myhostname %>
 #myorigin = $myhostname
 #myorigin = $mydomain
 #
-<% if @_myorigin %>
-myorigin = <%= @_myorigin %>
+<% if @myorigin %>
+myorigin = <%= @myorigin %>
 <% end %>
 
 
@@ -194,7 +194,9 @@ myorigin = <%= @_myorigin %>
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
 #mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain,
 #	mail.$mydomain, www.$mydomain, ftp.$mydomain
-mydestination = <%= @_mydestination %>
+mydestination = <%- komma="" -%>
+<%- @mydestination.each do |destination| -%>
+<%= komma -%><%= destination -%><%- komma=', ' -%><%- end -%>
 
 # REJECTING MAIL FOR UNKNOWN LOCAL USERS
 #

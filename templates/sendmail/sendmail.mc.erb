@@ -92,7 +92,7 @@ dnl define(`SMART_HOST', `your.isp.mail.server')
 dnl Uncomment the first line to change the location of the default
 dnl /etc/mail/local-host-names and comment out the second line.
 dnl define(`confCW_FILE', `-o /etc/mail/sendmail.cw')
-define(`confCW_FILE', `-o /etc/mail/local-host-names')
+define(`confCW_FILE', `-o <%= @local_host_names %>')
 
 dnl Enable for both IPv4 and IPv6 (optional)
 DAEMON_OPTIONS(`Name=IPv4, Family=inet')

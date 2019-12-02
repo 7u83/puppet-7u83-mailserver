@@ -48,13 +48,16 @@ class mailserver (
 
 
 	$myhostname = $trusted['hostname'],
+	$myorigin = $myhostname,
+	$mydestination = [$myhostname],
 
 ) inherits ::mailserver::params {
 
         $res = "::mailserver::${mailserver}"
 
 	class{ "$res":
-		myhostname => $myhostname	
+		myhostname => $myhostname,
+		mydestination => $mydestination,
 	}
 
 

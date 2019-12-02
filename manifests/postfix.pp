@@ -43,7 +43,10 @@ class mailserver::postfix(
 	$version = installed,
 
 
-	$myhostname = $trusted['hostname']
+	$myhostname = $trusted['hostname'],
+	$myorigin = $myhostname,
+	$mydestination = [$myhostname],
+
 
 ) inherits ::mailserver::postfix::params{
 
