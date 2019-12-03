@@ -8,6 +8,9 @@ class mailserver::sendmail::params(){
 			$m4_cmd = '/usr/bin/m4 -D_CF_DIR_=/usr/share/sendmail/cf/   /usr/share/sendmail/cf/m4/cf.m4'
 		}
 		'Debian':{
+			$service = 'sendmail'
+			$etc_mail = '/etc/mail'
+			$m4_cmd = '/usr/bin/m4 -D_CF_DIR_=/usr/share/sendmail/cf/   /usr/share/sendmail/cf/m4/cf.m4'
 		}
 	}
 
@@ -190,7 +193,16 @@ class mailserver::sendmail::install(
 	
 		}
 		'Debian':{
+			package {"sendmail":
+				ensure => present,
+				notify => Anchor["sendmail_installed"],
+			} ->
+			anchor {"sendmail_pkg_installed":
+			} 
 
+			anchor {"sendmail_installed":
+				require => Anchor["sendmail_pkg_installed"],
+			}
 		}
 	}
 
