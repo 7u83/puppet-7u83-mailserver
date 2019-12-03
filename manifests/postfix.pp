@@ -88,7 +88,8 @@ class mailserver::postfix(
 				ensure => $ensure_version,
 				require => $package_require
 			} ->
-			file {"/usr/local/etc/mail/mailer.conf":
+			file { "postfix_mailer_conf":
+				path => "/usr/local/etc/mail/mailer.conf",
 				ensure => $ensure_file,
 				content => template("mailserver/mailer.conf.erb"),
 				require => File["/usr/local/etc/mail"],
