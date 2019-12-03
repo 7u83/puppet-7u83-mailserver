@@ -46,6 +46,8 @@ class mailserver (
 	$mailserver = $::mailserver::params::mailserver,
 	$mailserver_version = 'latest',
 
+	$ldap = false,
+	$sasl = false,
 
 	$myhostname = $trusted['hostname'],
 	$myorigin = $myhostname,
@@ -58,8 +60,9 @@ class mailserver (
 	class{ "$res":
 		myhostname => $myhostname,
 		mydestination => $mydestination,
+		ldap => $ldap,
+		sasl => $sasl,
 	}
-
 
 }
 	
