@@ -43,8 +43,8 @@
 # Copyright 2018 7u83.
 #
 class mailserver (
-	$mailserver = $::mailserver::params::mailserver,
-	$mailserver_version = 'latest',
+	$mta = $::mailserver::params::mta,
+	$mta_version = 'latest',
 
 	$ldap = false,
 	$sasl = false,
@@ -55,9 +55,9 @@ class mailserver (
 
 ) inherits ::mailserver::params {
 
-        $res = "::mailserver::${mailserver}"
+        $mta_class = "::mailserver::${mta}"
 
-	class{ "$res":
+	class{ "$mta_class":
 		myhostname => $myhostname,
 		mydestination => $mydestination,
 		ldap => $ldap,

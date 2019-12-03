@@ -3,10 +3,10 @@
 class mailserver::params {
         case $::osfamily {
                 'FreeBSD':{
-			$mailserver = 'postfix'
+			$mta = 'sendmail'
 		}
-		default: {
-			$mailserver = 'postfix'
+		'Debian': {
+			$mta = 'postfix'
 		}
 	}
 
