@@ -54,11 +54,15 @@ class mailserver::sendmail(
 	$myorigin = $myhostname,
 	$mydestination = [$myhostname],
 
+	$ldap = false,
+	$sasl = false
+
 )
 inherits mailserver::sendmail::params
 {
-	class {"mailserver::postfix":
-		ensure => absent
+	class {"mailserver::sendmail::install":
+		ldap => $ldap,
+		sasl => $sasl
 	}
 
 	service{ $service:
@@ -66,7 +70,9 @@ inherits mailserver::sendmail::params
 		require => [
 			File[$sendmail_mc],
 			File[$submit_mc],
-		]
+			Anchor["sendmail_installed"],
+		],
+		subscribe => Anchor["sendmail_installed"],
 	}
 
 	
@@ -97,6 +103,97 @@ inherits mailserver::sendmail::params
 		content => template("mailserver/sendmail/local-host-names.erb"),
 		notify => Service[$service],
 	}
+
+}
+
+class mailserver::sendmail::install(
+	$ldap = false,
+	$sasl = false,	
+	$ensure = 'latest',
+)
+{
+	$use_bsd_ports = $ldap 
+	$use_bsd_package = $sasl
+	$use_bsd_local = !($ldap or $sasl)
+ 
+	case $::osfamily {
+                'FreeBSD':{
+			ensure_resource("file","/usr/local/etc/mail",{
+				ensure => directory
+			})
+
+
+			$package = 'sendmail'
+#			file {"/usr/local/etc/mail":
+#				ensure => directory
+#			}
+
+			if $use_bsd_local {
+				# use local
+				package {"sendmail":
+					ensure => absent,
+					notify => Anchor["sendmail_installed"],
+				} ->
+				file {"sendmail_mailer_conf":
+					path => "/usr/local/etc/mail/mailer.conf",
+					ensure => absent,
+				}->
+				file_line {"bsdmakeconf_sendmail_cf":
+					ensure => absent,
+					path => "/etc/make.conf",	
+					line => "SENDMAIL_CF_DIR=/usr/local/share/sendmail/cf\t#created by puppet",
+					match => "^SENDMAIL_CF_DIR.*=",
+					require => File["/etc/make.conf"]
+				}->
+				anchor {"sendmail_pkg_installed":}
+			}
+			else {
+				if $use_bsd_ports {
+					$package_settings  = {
+						'LDAP' => $ldap,
+						'SASL' => $sasl,
+					}
+					$package_provider = 'portsng'
+				}
+				else {
+					$package_settings = undef
+					$package_provider = undef
+				}
+
+				package {"sendmail":
+					ensure => $ensure,
+					provider => $package_provider,
+					notify => Anchor["sendmail_installed"],
+				} ->
+				file {"sendmail_mailer_conf":
+					path => "/usr/local/etc/mail/mailer.conf",
+					ensure => file,
+					content => template("mailserver/sendmail/mailer.conf.erb"),
+					require => File["/usr/local/etc/mail"],
+				}->
+				file_line {"bsdmakeconf_sendmail_cf":
+					ensure => present,
+					path => "/etc/make.conf",	
+					line => "SENDMAIL_CF_DIR=/usr/local/share/sendmail/cf\t#created by puppet",
+					match => "^SENDMAIL_CF_DIR.*=",
+					require => File["/etc/make.conf"]
+				}->
+				anchor {"sendmail_pkg_installed":}
+	
+				
+			}
+
+			anchor {"sendmail_installed":
+				require => Anchor["sendmail_pkg_installed"],
+			}
+
+	
+		}
+		'Debian':{
+
+		}
+	}
+
 
 }
 
