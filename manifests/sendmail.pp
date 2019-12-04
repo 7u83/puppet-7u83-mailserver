@@ -5,12 +5,10 @@ class mailserver::sendmail::params(){
                 'FreeBSD':{
 			$service = 'sendmail'
 			$etc_mail = '/etc/mail'
-			$m4_cmd = '/usr/bin/m4 -D_CF_DIR_=/usr/share/sendmail/cf/   /usr/share/sendmail/cf/m4/cf.m4'
 		}
 		'Debian':{
 			$service = 'sendmail'
 			$etc_mail = '/etc/mail'
-			$m4_cmd = '/usr/bin/m4 -D_CF_DIR_=/usr/share/sendmail/cf/   /usr/share/sendmail/cf/m4/cf.m4'
 		}
 	}
 
@@ -78,13 +76,14 @@ inherits mailserver::sendmail::params
 		subscribe => Anchor["sendmail_installed"],
 	}
 
+	$bindir_config = $::mailserver::sendmail::install::bindir_config
 	
 	file {$sendmail_mc:
 		ensure => file,
 		content => template("mailserver/sendmail/sendmail.mc.erb"),
 	} ->
 	exec {"make sendmail.cf":
-		command => "$m4_cmd $sendmail_mc > $sendmail_cf",
+		command => "${mailserver::sendmail::install::m4_cmd} $sendmail_mc > $sendmail_cf",
 		refreshonly => true,
 		subscribe => File[$sendmail_mc],
 		notify => Service[$service],
@@ -95,7 +94,7 @@ inherits mailserver::sendmail::params
 		content => template("mailserver/sendmail/submit.mc.erb"),
 	} ->
 	exec {"make submit.cf":
-		command => "$m4_cmd $submit_mc > $submit_cf",
+		command => "${mailserver::sendmail::install::m4_cmd} $submit_mc > $submit_cf",
 		refreshonly => true,
 		subscribe => File[$sendmail_mc],
 		notify => Service[$service],
@@ -132,6 +131,7 @@ class mailserver::sendmail::install(
 #			}
 
 			if $use_bsd_local {
+				$m4_cmd = '/usr/bin/m4 -D_CF_DIR_=/usr/share/sendmail/cf/   /usr/share/sendmail/cf/m4/cf.m4'
 				# use local
 				package {"sendmail":
 					ensure => absent,
@@ -151,6 +151,9 @@ class mailserver::sendmail::install(
 				anchor {"sendmail_pkg_installed":}
 			}
 			else {
+				$bindir_config = "define(`confEBINDIR', `/usr/local/libexec')dnl
+define(`UUCP_MAILER_PATH', `/usr/local/bin/uux')dnl"
+				$m4_cmd = '/usr/bin/m4 -D_CF_DIR_=/usr/local/share/sendmail/cf/   /usr/local/share/sendmail/cf/m4/cf.m4'
 				if $use_bsd_ports {
 					$package_settings  = {
 						'LDAP' => $ldap,
@@ -193,6 +196,7 @@ class mailserver::sendmail::install(
 	
 		}
 		'Debian':{
+			$m4_cmd = '/usr/bin/m4 -D_CF_DIR_=/usr/share/sendmail/cf/   /usr/share/sendmail/cf/m4/cf.m4'
 			package {"sendmail":
 				ensure => present,
 				notify => Anchor["sendmail_installed"],
