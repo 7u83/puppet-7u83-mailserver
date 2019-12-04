@@ -5,6 +5,8 @@ class mailserver::sendmail::params(){
                 'FreeBSD':{
 			$service = 'sendmail'
 			$etc_mail = '/etc/mail'
+			$mail_uid = 'mailnull'
+			$mail_gid = 'mailnull'
 		}
 		'Debian':{
 			$service = 'sendmail'
@@ -56,8 +58,8 @@ class mailserver::sendmail(
 	$mydestination = [$myhostname],
 
 	$ldap = false,
-	$sasl = false
-
+	$sasl = false,
+	$input_milters=[],
 )
 inherits mailserver::sendmail::params
 {
@@ -65,6 +67,8 @@ inherits mailserver::sendmail::params
 		ldap => $ldap,
 		sasl => $sasl
 	}
+
+	notify {"INPUT_MILTERS: $input_milters":}
 
 	service{ $service:
 		ensure => running,

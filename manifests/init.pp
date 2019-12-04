@@ -52,25 +52,49 @@ class mailserver (
 	$myhostname = $trusted['hostname'],
 	$myorigin = $myhostname,
 	$mydestination = [$myhostname],
+	$mynetworks = ['127.0.0.1'],
+
+	# 
+	# DKIM params
+	#
+	$dkim_selector = undef,
+	$dkim_domains = undef,
+	$dkim_keyfile = undef,
+	$dkim_keyfile_source = undef,
+	$dkim_keyfile_content = undef,
 
 ) inherits ::mailserver::params {
 
-        $mta_class = "::mailserver::${mta}"
 
+	if $dkim_selector {
+		class {"mailserver::opendkim":
+			selector => $dkim_selector,
+			domains => $dkim_domains,
+			keyfile => $dkim_keyfile,
+			keyfile_source => $dkim_keyfile_srouce,
+			keyfile_content => $dkim_keyfile_content,
+			mynetworks => $mynetworks,
+		}
+		$dkim_milter = [$mailserver::opendkim::milter_sock]
+	}
+	else {
+		$dkim_milter = []
+	}
+
+
+        $mta_class = "::mailserver::${mta}"
 	class{ "$mta_class":
 		myhostname => $myhostname,
 		mydestination => $mydestination,
 		ldap => $ldap,
 		sasl => $sasl,
+		input_milters => concat ($dkim_milter,[],[]),
 	}
 
+	
+	$x = inline_template("<%= scope.lookupvar(\"mailserver::${mta}::local_host_names\") %>")
+	
+	notify {"L: $x":}
 }
 	
-
-
-
-
-
-
-
 

@@ -3,6 +3,7 @@
 #
 # Do not edit! 
 #
+UserID		<%= @uid %>:<%= @gid %>
 
 ##
 ## opendkim.conf -- configuration file for OpenDKIM filter
@@ -669,6 +670,7 @@ Selector		<%= @selector %>
 ##  local:/path/to/socket	to listen on a UNIX domain socket
 
 # Socket			inet:port@localhost
+Socket = <%= @milter_sock %>
 
 ##  SoftwareHeader { yes | no }
 ##  	default "no"
@@ -771,4 +773,3 @@ Syslog			Yes
 ##  Change to user "userid" before starting normal operation?  May include
 ##  a group ID as well, separated from the userid by a colon.
 
-UserID		<%= @uid %>:<%= @gid %>

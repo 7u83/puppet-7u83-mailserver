@@ -57,7 +57,9 @@ FEATURE(blacklist_recipients)
 FEATURE(local_lmtp)
 FEATURE(mailertable, `hash -o /etc/mail/mailertable')
 FEATURE(virtusertable, `hash -o /etc/mail/virtusertable')
-
+<%- @input_milters.each do |milter| -%>
+INPUT_MAIL_FILTER(`<%= milter %>', S=`<%= milter %>')
+<%- end -%>
 dnl Enable STARTTLS for receiving email.
 define(`CERT_DIR', `/etc/mail/certs')dnl
 define(`confSERVER_CERT', `CERT_DIR/host.cert')dnl
