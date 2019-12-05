@@ -76,9 +76,11 @@ class mailserver (
 			mynetworks => $mynetworks,
 		}
 		$dkim_milter = [$mailserver::opendkim::milter_sock]
+		$dkim_groups = [$mailserver::opendkim::gid]
 	}
 	else {
 		$dkim_milter = []
+		$dkim_groups = []
 	}
 
 
@@ -89,6 +91,7 @@ class mailserver (
 		ldap => $ldap,
 		sasl => $sasl,
 		input_milters => concat ($dkim_milter,[],[]),
+		groups => $dkim_groups,
 	}
 
 	
