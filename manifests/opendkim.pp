@@ -7,7 +7,7 @@ class mailserver::opendkim::params {
 			$service = "milter-opendkim"
 			$cfgdir = "/usr/local/etc/mail"
 			$cfgfile = "/usr/local/etc/mail/opendkim.conf"
-			$keysdir = "/usr/local/etc/mail"
+			$keysdir = "/var/db/dkimkeys"
 			$uid='mailnull'
 			$gid='mailnull'
 			$pkg = "opendkim"
@@ -47,6 +47,10 @@ class mailserver::opendkim(
 	}
 
 	$dkmynetworks = join($mynetworks,", ")
+
+	ensure_resource("file","$cfgdir",{
+		ensure => directory
+	})
 
 
 	if $keyfile_content or $keyfile_source {
