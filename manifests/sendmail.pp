@@ -7,10 +7,18 @@ class mailserver::sendmail::params(){
 			$etc_mail = '/etc/mail'
 			$mail_uid = 'mailnull'
 			$mail_gid = 'mailnull'
+			$ostype = 'freebsd6'
+			$mta_domain = 'generic'
+			$submit_domain = 'generic'
 		}
 		'Debian':{
 			$service = 'sendmail'
 			$etc_mail = '/etc/mail'
+			$ostype = 'debian'
+			$mail_uid = 'smmta'
+			$mail_gid = 'smmta'
+			$mta_domain = 'debian-mta'
+			$submit_domain = 'debian-msp'
 		}
 	}
 
@@ -68,8 +76,6 @@ inherits mailserver::sendmail::params
 		sasl => $sasl
 	}
 
-	notify {"INPUT_MILTERS: $input_milters":}
-
 	service{ $service:
 		ensure => running,
 		require => [
@@ -100,7 +106,7 @@ inherits mailserver::sendmail::params
 	exec {"make submit.cf":
 		command => "${mailserver::sendmail::install::m4_cmd} $submit_mc > $submit_cf",
 		refreshonly => true,
-		subscribe => File[$sendmail_mc],
+		subscribe => File[$submit_mc],
 		notify => Service[$service],
 	}
 
