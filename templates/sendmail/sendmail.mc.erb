@@ -51,7 +51,6 @@ divert(0)
 VERSIONID(`$FreeBSD: releng/12.0/etc/sendmail/freebsd.mc 285230 2015-07-07 03:00:57Z gshapiro $')
 OSTYPE(`<%= @ostype %>')
 DOMAIN(`<%= @mta_domain %>')
-DOMAIN(generic)
 <%= @bindir_config %>
 FEATURE(access_db, `hash -o -T<TMPF> /etc/mail/access')
 FEATURE(blacklist_recipients)

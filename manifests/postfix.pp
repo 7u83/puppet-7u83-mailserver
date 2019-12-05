@@ -9,6 +9,8 @@ class mailserver::postfix::params(){
 			$command_directory = "/usr/local/sbin"
 			$daemon_directory = "/usr/local/libexec/postfix"
 			$data_directory = "/var/db/postfix"
+			$meta_directory = " /usr/local/libexec/postfix" 
+			$shlib_directory = "/usr/local/lib/postfix"
 			$mail_owner = 'postfix'
 			$setgid_group = 'maildrop'
 		}
@@ -18,6 +20,8 @@ class mailserver::postfix::params(){
 			$command_directory = "/usr/sbin"
 			$daemon_directory = "/usr/lib/postfix/sbin"
 			$data_directory = "/var/lib/postfix"
+			$meta_directory = "/etc/postfix"
+			$shlib_directory = "/usr/lib/postfix"
 			$mail_owner = 'postfix'
 			$setgid_group = 'postdrop'
 		}
@@ -34,6 +38,10 @@ class mailserver::postfix(
 	$ldap = false,
 	$mysql = false,
 	$pgsql = false,
+	$sasl = false,
+
+	$input_milters = [],
+
 
 	$local_userdb = ["passwd"],
 	$message_size_limit = 20000000,
@@ -47,6 +55,7 @@ class mailserver::postfix(
 	$myorigin = $myhostname,
 	$mydestination = [$myhostname],
 
+	$groups = [],
 
 ) inherits ::mailserver::postfix::params{
 
@@ -125,6 +134,7 @@ class mailserver::postfix(
 	}
 
 
+	$non_smtpd_milters = concat ($input_milters,"'")[0]
 
 	concat { "$master_cf": 
 		ensure => $ensure,
@@ -145,7 +155,10 @@ class mailserver::postfix(
 		service { "$service":
 			ensure => $ensure_service,
 			require => Concat["$master_cf"],
-			subscribe => [Concat["$master_cf"]], 
+			subscribe => [
+				Concat["$master_cf"],
+
+			], 
 		}
 	}
 
@@ -154,9 +167,28 @@ class mailserver::postfix(
 		content => template("mailserver/postfix/main.cf.erb"),
 		require => [
 			Package[$packages]
-		]
+		],
+		notify => Service[$service],
 	}
 
+	user {"$mail_owner":
+		ensure => present,
+		groups => $groups,
+		require => Package[$packages]
+	}
+
+
+	mailserver::postfix::service{"smtp-service":
+		service => smtp,
+		command => smtp,
+		type => unix,
+		private => "-",
+		args => [
+	#		"{ -o non_smtpd_milters = $smtpd_milters }",
+		] 
+
+		
+	}
 
 }
 
@@ -173,7 +205,7 @@ define mailserver::postfix::service(
 ){
 	concat::fragment  { "$title":
 		target => "$::mailserver::postfix::params::master_cf",
-		content => template("mailserver/postfix-master-service.conf.erb");
+		content => template("mailserver/postfix/master.cf.service.erb");
 	}	
 }
 

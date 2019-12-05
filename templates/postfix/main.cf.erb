@@ -706,8 +706,12 @@ sample_directory = /usr/local/etc/postfix
 #
 readme_directory = /usr/local/share/doc/postfix
 inet_protocols = ipv4
-meta_directory = /usr/local/libexec/postfix
-shlib_directory = /usr/local/lib/postfix
+
+#meta_directory = /usr/local/libexec/postfix
+meta_directory = <%= @meta_directory %> 
+
+#shlib_directory = /usr/local/lib/postfix
+shlib_directory = <%= @shlib_directory %>
 
 
 virtual_mailbox_domains = <%= @_virtual_mailbox_domains %>
@@ -779,5 +783,6 @@ default_destination_rate_delay=<%= @default_destination_rate_delay %>
 
 smtp_tls_security_level = may
 
-smtpd_sasl_authenticated_header = yes
-smtp_header_checks = pcre:/usr/local/etc/postfix/header_checks
+#smtpd_sasl_authenticated_header = yes
+#smtp_header_checks = pcre:/usr/local/etc/postfix/header_checks
+#

@@ -68,6 +68,8 @@ class mailserver::sendmail(
 	$ldap = false,
 	$sasl = false,
 	$input_milters=[],
+
+	$groups = [],
 )
 inherits mailserver::sendmail::params
 {
@@ -115,7 +117,11 @@ inherits mailserver::sendmail::params
 		content => template("mailserver/sendmail/local-host-names.erb"),
 		notify => Service[$service],
 	}
-
+	user {"$mail_uid":
+		ensure => present,
+		groups => $groups,
+		require => Anchor["sendmail_installed"]
+	}
 }
 
 class mailserver::sendmail::install(
