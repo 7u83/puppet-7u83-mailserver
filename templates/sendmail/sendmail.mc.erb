@@ -49,7 +49,8 @@ divert(-1)
 
 divert(0)
 VERSIONID(`$FreeBSD: releng/12.0/etc/sendmail/freebsd.mc 285230 2015-07-07 03:00:57Z gshapiro $')
-OSTYPE(freebsd6)
+OSTYPE(`<%= @ostype %>')
+DOMAIN(`<%= @mta_domain %>')
 DOMAIN(generic)
 <%= @bindir_config %>
 FEATURE(access_db, `hash -o -T<TMPF> /etc/mail/access')
@@ -98,7 +99,7 @@ define(`confCW_FILE', `-o <%= @local_host_names %>')
 
 dnl Enable for both IPv4 and IPv6 (optional)
 DAEMON_OPTIONS(`Name=IPv4, Family=inet')
-DAEMON_OPTIONS(`Name=IPv6, Family=inet6, Modifiers=O')
+dnl DAEMON_OPTIONS(`Name=IPv6, Family=inet6, Modifiers=O') dnl
 
 define(`confBIND_OPTS', `WorkAroundBrokenAAAA')
 define(`confNO_RCPT_ACTION', `add-to-undisclosed')
