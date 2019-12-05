@@ -71,7 +71,7 @@ class mailserver (
 			selector => $dkim_selector,
 			domains => $dkim_domains,
 			keyfile => $dkim_keyfile,
-			keyfile_source => $dkim_keyfile_srouce,
+			keyfile_source => $dkim_keyfile_source,
 			keyfile_content => $dkim_keyfile_content,
 			mynetworks => $mynetworks,
 		}
