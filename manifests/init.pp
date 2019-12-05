@@ -92,9 +92,8 @@ class mailserver (
 	}
 
 	
-	$x = inline_template("<%= scope.lookupvar(\"mailserver::${mta}::local_host_names\") %>")
-	
-	notify {"L: $x":}
+#	$x = inline_template("<%= scope.lookupvar(\"mailserver::${mta}::local_host_names\") %>")
+#	notify {"L: $x":}
 }
 	
 
