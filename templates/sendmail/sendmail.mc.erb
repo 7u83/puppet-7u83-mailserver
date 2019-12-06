@@ -103,5 +103,8 @@ dnl DAEMON_OPTIONS(`Name=IPv6, Family=inet6, Modifiers=O') dnl
 define(`confBIND_OPTS', `WorkAroundBrokenAAAA')
 define(`confNO_RCPT_ACTION', `add-to-undisclosed')
 define(`confPRIVACY_FLAGS', `authwarnings,noexpn,novrfy')
-MAILER(local)
+
+define(`confLOCAL_MAILER', `cyrusv2')dnl
+MAILER(`cyrusv2')dnl
+dnl MAILER(local)dnl
 MAILER(smtp)
