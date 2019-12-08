@@ -57,6 +57,7 @@ FEATURE(blacklist_recipients)
 FEATURE(local_lmtp)
 FEATURE(mailertable, `hash -o /etc/mail/mailertable')
 FEATURE(virtusertable, `hash -o /etc/mail/virtusertable')
+define(`confDONT_BLAME_SENDMAIL',`GroupWritableDirPathSafe')
 <%- @input_milters.each do |milter| -%>
 INPUT_MAIL_FILTER(`<%= milter %>', S=`<%= milter %>')
 <%- end -%>
