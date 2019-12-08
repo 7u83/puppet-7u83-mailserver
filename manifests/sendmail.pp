@@ -70,6 +70,13 @@ class mailserver::sendmail(
 	$input_milters=[],
 
 	$groups = [],
+
+
+	$submission = false,
+	$smtps = false,
+	$smtp = false,	
+	
+
 )
 inherits mailserver::sendmail::params
 {
@@ -89,7 +96,7 @@ inherits mailserver::sendmail::params
 	}
 
 	$bindir_config = $::mailserver::sendmail::install::bindir_config
-	
+
 	file {$sendmail_mc:
 		ensure => file,
 		content => template("mailserver/sendmail/sendmail.mc.erb"),
@@ -100,6 +107,8 @@ inherits mailserver::sendmail::params
 		subscribe => File[$sendmail_mc],
 		notify => Service[$service],
 	}
+
+
 
 	file {$submit_mc:
 		ensure => file,
@@ -225,8 +234,6 @@ define(`UUCP_MAILER_PATH', `/usr/local/bin/uux')dnl"
 			}
 		}
 	}
-
-
 }
 
 
