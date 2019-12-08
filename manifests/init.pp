@@ -83,7 +83,6 @@ class mailserver (
 		$dkim_groups = []
 	}
 
-
         $mta_class = "::mailserver::${mta}"
 	class{ "$mta_class":
 		myhostname => $myhostname,
