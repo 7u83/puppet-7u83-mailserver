@@ -110,7 +110,7 @@ class mailserver::opendkim(
 			ensure => "775",
 			notify => Service[$service]
 		}
-	} ->
+	} 
 	service {$service:
 		ensure => running,
 		require => File["$cfgfile"],
