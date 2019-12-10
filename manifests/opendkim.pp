@@ -11,7 +11,7 @@ class mailserver::opendkim::params {
 			$uid='mailnull'
 			$gid='mailnull'
 			$pkg = "opendkim"
-			$milter_sock='local:/var/run/milteropendkim/opendkim.sock'
+			$milter_sock='/var/run/milteropendkim/opendkim.sock'
 			$pid_file='/var/run/milteropendkim/opendkim.pid'
 		}
 		'Debian': {
