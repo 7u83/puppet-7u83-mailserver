@@ -4,9 +4,9 @@
 
 class mailserver::opendmarc(
 	$umask = undef,
-	$reject_failures = undef,
-	$software_header = undef,
-	$spf_self_validate,
+	$reject_failures = true,
+	$software_header = true,
+	$spf_self_validate = true,
 ) 
 {
         case $::osfamily {
