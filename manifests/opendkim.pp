@@ -21,7 +21,7 @@ class mailserver::opendkim::params {
 			$keysdir = "/etc/dkimkeys"
 			$uid='opendkim'
 			$gid='opendkim'
-			$milter_sock='local:/var/run/opendkim/opendkim.sock'
+			$milter_sock='/var/run/opendkim/opendkim.sock'
 			$pid_file='/var/run/opendkim/opendkim.pid'
 			$pkg = "opendkim"
 		}

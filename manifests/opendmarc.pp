@@ -15,6 +15,7 @@ class mailserver::opendmarc(
 			$pkg = "opendmarc"
 			$service = "opendmarc"
 			$milter_socket = "/var/run/opendmarc/milter"
+			$pid_file='/var/run/opendmarc/opendmarc.pid'
 
 			package { "$pkg":
 				ensure => installed,
@@ -26,10 +27,12 @@ class mailserver::opendmarc(
 			}
 
 		}
-		default: {
+		'Debian': {
 			$pkg = "opendmarc"
 			$conf = "/etc/opendmarc.conf"
 			$service = "opendmarc"
+			$milter_socket = "/var/run/opendmarc/milter"
+			$pid_file='/var/run/opendmarc/opendmarc.pid'
 			package { "$pkg":
 				ensure => installed
 			}

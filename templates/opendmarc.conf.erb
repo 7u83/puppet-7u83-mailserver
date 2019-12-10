@@ -219,6 +219,9 @@
 ##  containing the process ID.
 #
 # PidFile /var/run/opendmarc.pid
+<%- if @pid_file -%>
+PidFile <%= @pid_file %>
+<%- end -%>
 
 ##  PublicSuffixList path
 ##  	default (none)
@@ -288,6 +291,7 @@ RejectFailures true
 ##  address is used, it must be enclosed in square brackets.
 #
 # Socket inet:8893@localhost
+Socket <%= @milter_socket %>
 
 ##  SoftwareHeader { true | false }
 ##  	default "false"
