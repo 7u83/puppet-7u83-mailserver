@@ -11,7 +11,7 @@ class mailserver::opendkim::params {
 			$uid='mailnull'
 			$gid='mailnull'
 			$pkg = "opendkim"
-			$milter_sock='local:/var/run/milteropendkim/opendkim.sock'
+			$milter_sock='/var/run/milteropendkim/opendkim.sock'
 			$pid_file='/var/run/milteropendkim/opendkim.pid'
 		}
 		'Debian': {
@@ -42,6 +42,8 @@ class mailserver::opendkim(
 
 ) inherits mailserver::opendkim::params
 {
+
+
 	package { $pkg:
 		ensure => installed
 	}
@@ -102,10 +104,19 @@ class mailserver::opendkim(
 		notify => Service[$service],
 	}
 
+
+        if $::osfamily == 'FreeBSD' {
+		mailserver::sysrc { "milteropendkim_socket_perms":
+			ensure => "775",
+			notify => Service[$service]
+		}
+	} 
 	service {$service:
 		ensure => running,
 		require => File["$cfgfile"],
 	}
+
+
 	
 }
 

@@ -52,15 +52,15 @@ VERSIONID(`$FreeBSD: releng/12.0/etc/sendmail/freebsd.mc 285230 2015-07-07 03:00
 OSTYPE(`<%= @ostype %>')
 DOMAIN(`<%= @mta_domain %>')
 <%= @bindir_config %>
+<%- @input_milters.each do |milter| -%>
+INPUT_MAIL_FILTER(`<%= milter %>', S=`<%= milter %>')
+<%- end -%>
 FEATURE(access_db, `hash -o -T<TMPF> /etc/mail/access')
 FEATURE(blacklist_recipients)
 FEATURE(local_lmtp)
 FEATURE(mailertable, `hash -o /etc/mail/mailertable')
 FEATURE(virtusertable, `hash -o /etc/mail/virtusertable')
 define(`confDONT_BLAME_SENDMAIL',`GroupWritableDirPathSafe')
-<%- @input_milters.each do |milter| -%>
-INPUT_MAIL_FILTER(`<%= milter %>', S=`<%= milter %>')
-<%- end -%>
 dnl Enable STARTTLS for receiving email.
 define(`CERT_DIR', `/etc/mail/certs')dnl
 define(`confSERVER_CERT', `CERT_DIR/host.cert')dnl
@@ -97,15 +97,12 @@ dnl /etc/mail/local-host-names and comment out the second line.
 dnl define(`confCW_FILE', `-o /etc/mail/sendmail.cw')
 define(`confCW_FILE', `-o <%= @local_host_names %>')
 
+FEATURE(`no_default_msa')dnl
 dnl Enable for both IPv4 and IPv6 (optional)
-DAEMON_OPTIONS(`Name=IPv4, Family=inet')
+dnl DAEMON_OPTIONS(`Port=<%= @port %>, Name=IPv4, Family=inet') dnl
 dnl DAEMON_OPTIONS(`Name=IPv6, Family=inet6, Modifiers=O') dnl
-
+define(`confAUTH_MECHANISMS', `LOGIN PLAIN')dnl
+define(`confPID_FILE',`<%= @pid_file %>')dnl
 define(`confBIND_OPTS', `WorkAroundBrokenAAAA')
 define(`confNO_RCPT_ACTION', `add-to-undisclosed')
 define(`confPRIVACY_FLAGS', `authwarnings,noexpn,novrfy')
-
-define(`confLOCAL_MAILER', `cyrusv2')dnl
-MAILER(`cyrusv2')dnl
-dnl MAILER(local)dnl
-MAILER(smtp)

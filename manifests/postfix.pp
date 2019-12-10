@@ -135,13 +135,12 @@ class mailserver::postfix(
 
 
 	$non_smtpd_milters = concat ($input_milters,"'")[0]
+	$smtpd_milters = concat ($input_milters,"'")[0]
 
 	concat { "$master_cf": 
 		ensure => $ensure,
 		require => [
 			Package[$apckages]
-#			Class["mailserver::postfix"],
-#			Class["mailserver::clamav"]
 		]
 	}
 
@@ -184,11 +183,22 @@ class mailserver::postfix(
 		type => unix,
 		private => "-",
 		args => [
-	#		"{ -o non_smtpd_milters = $smtpd_milters }",
+			"{ -o non_smtpd_milters = $smtpd_milters }",
 		] 
-
-		
 	}
+
+
+	mailserver::postfix::service{"smtpd-service":
+		service => smtp,
+		command => smtpd,
+		type => inet,
+		private => "n",
+		args => [
+			"{ -o smtpd_milters = $smtpd_milters }",
+		] 
+	}
+
+	
 
 }
 

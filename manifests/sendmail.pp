@@ -10,6 +10,7 @@ class mailserver::sendmail::params(){
 			$ostype = 'freebsd6'
 			$mta_domain = 'generic'
 			$submit_domain = 'generic'
+			$pid_dir = "/var/run"
 		}
 		'Debian':{
 			$service = 'sendmail'
@@ -19,6 +20,7 @@ class mailserver::sendmail::params(){
 			$mail_gid = 'smmta'
 			$mta_domain = 'debian-mta'
 			$submit_domain = 'debian-msp'
+			$pid_dir = "/var/run"
 		}
 	}
 
@@ -58,7 +60,6 @@ class mailserver::sendmail::params(){
 
 }
 
-
 class mailserver::sendmail(
 
 	$myhostname = $trusted['hostname'],
@@ -70,6 +71,11 @@ class mailserver::sendmail(
 	$input_milters=[],
 
 	$groups = [],
+
+	$pid_dir = $mailserver::sendmail::params::pid_dir,
+
+	$system = true,
+
 )
 inherits mailserver::sendmail::params
 {
@@ -78,28 +84,26 @@ inherits mailserver::sendmail::params
 		sasl => $sasl
 	}
 
-	service{ $service:
-		ensure => running,
-		require => [
-			File[$sendmail_mc],
-			File[$submit_mc],
-			Anchor["sendmail_installed"],
-		],
-		subscribe => Anchor["sendmail_installed"],
+	if $system {
+		mailserver::sendmail::instance{'default':
+			input_milters => $input_milters,
+			require => Anchor["sendmail_installed"],
+		}
 	}
 
+#	service{ $service:
+#		ensure => running,
+#		require => [
+#			Concat[$sendmail_mc],
+#			File[$submit_mc],
+#			Anchor["sendmail_installed"],
+#		],
+#		subscribe => Anchor["sendmail_installed"],
+#	}
+
 	$bindir_config = $::mailserver::sendmail::install::bindir_config
-	
-	file {$sendmail_mc:
-		ensure => file,
-		content => template("mailserver/sendmail/sendmail.mc.erb"),
-	} ->
-	exec {"make sendmail.cf":
-		command => "${mailserver::sendmail::install::m4_cmd} $sendmail_mc > $sendmail_cf",
-		refreshonly => true,
-		subscribe => File[$sendmail_mc],
-		notify => Service[$service],
-	}
+
+
 
 	file {$submit_mc:
 		ensure => file,
@@ -109,20 +113,21 @@ inherits mailserver::sendmail::params
 		command => "${mailserver::sendmail::install::m4_cmd} $submit_mc > $submit_cf",
 		refreshonly => true,
 		subscribe => File[$submit_mc],
-		notify => Service[$service],
+#		notify => Service[$service],
 	}
 
 	file{$local_host_names:
 		ensure => file,
 		content => template("mailserver/sendmail/local-host-names.erb"),
-		notify => Service[$service],
 	}
 	user {"$mail_uid":
 		ensure => present,
 		groups => $groups,
 		require => Anchor["sendmail_installed"]
 	}
+
 }
+	
 
 class mailserver::sendmail::install(
 	$ldap = false,
@@ -201,8 +206,6 @@ define(`UUCP_MAILER_PATH', `/usr/local/bin/uux')dnl"
 					require => File["/etc/make.conf"]
 				}->
 				anchor {"sendmail_pkg_installed":}
-	
-				
 			}
 
 			anchor {"sendmail_installed":
@@ -225,9 +228,169 @@ define(`UUCP_MAILER_PATH', `/usr/local/bin/uux')dnl"
 			}
 		}
 	}
-
-
 }
 
 
 
+
+
+
+define mailserver::sendmail::instance(
+	$myhostname = $mailserver::sendmail::myhostname,
+	$input_milters = [],
+
+){
+	if $title != 'default' {
+		$instance_name = "-$title"
+	}
+
+
+	$service = "sendmail${instance_name}"
+	$pid_file = "${mailserver::sendmail::pid_dir}/sendmail${instance_name}.pid"
+	$cfg_file = "${mailserver::sendmail::etc_mail}/sendmail${instance_name}.cf"
+	$sendmail_mc = "${mailserver::sendmail::etc_mail}/sendmail${instance_name}.mc"
+	$sendmail_cf = "${mailserver::sendmail::etc_mail}/sendmail${instance_name}.cf"
+	$ostype = "$mailserver::sendmail::ostype"
+	$mta_domain = "$mailserver::sendmail::mta_domain"
+	$bindir_config = "${mailserver::sendmail::install::bindir_config}"
+	$local_host_names = "${mailserver::sendmail::local_host_names}"
+
+	
+	if $title != 'default' {
+		$status_cmd = "/bin/test -f $pid_file && ps -Ao pid | grep `head -1 $pid_file`"
+		$stop_cmd = " ( /bin/test -f $pid_file && kill `head -1 $pid_file` ) || /usr/bin/true"
+		$restart_cmd = "/bin/kill -HUP `head -1 $pid_file`"
+		$start_cmd = "/usr/sbin/sendmail -C $cfg_file -bd"
+	}
+
+
+	service {$service:
+		ensure => running,
+		start => $start_cmd,
+		stop => $stop_cmd,
+		status => $status_cmd,
+		restart => $restart_cmd,
+		require => [
+			Exec["make${sendmail_cf}"],
+		],
+		subscribe => Anchor["sendmail_installed"],
+	}	
+
+	concat { "$sendmail_mc": 
+		ensure => present,
+	} ->
+	exec {"make${sendmail_cf}":
+		command => "${mailserver::sendmail::install::m4_cmd} $sendmail_mc > $sendmail_cf",
+		refreshonly => true,
+		subscribe => Concat[$sendmail_mc],
+		notify => Service[$service],
+	}
+
+	concat::fragment { "${sendmail_cf}-head":
+		target => "$sendmail_mc",
+		order => '00',
+		content => template('mailserver/sendmail/sendmail.mc-head.erb'),
+	} 
+
+	concat::fragment { "${sendmail_cf} foot":
+		target => "$sendmail_mc",
+		order => '99',
+		content => template('mailserver/sendmail/sendmail.mc-foot.erb'),
+	} 
+
+}
+
+
+define mailserver::sendmail::service (
+	$input_milters = [],
+	$port = $title,
+	$etrn = true,
+	$require_auth = false,
+
+	$instance ,
+)
+{
+	if $instance != 'default' {
+		$instance_name = "-${instance}"
+	}
+
+	$sendmail_mc = "${mailserver::sendmail::etc_mail}/sendmail${instance_name}.mc"
+	$sendmail_cf = "${mailserver::sendmail::etc_mail}/sendmail${instance_name}.cf"
+
+	concat::fragment  { "${sendmail_mc}-$title":
+		target => "$sendmail_mc",
+		content => template("mailserver/sendmail/sendmail.mc-service.erb");
+	}	
+}
+
+
+
+
+define mailserver::sendmail::mta(
+	$myhostname = $mailserver::sendmail::myhostname,
+	$port = $title,
+)
+{
+	if ! $mailserver::sendmail::system {
+		mailserver::sendmail::instance{"$title":
+			system => false,
+			input_milters => $input_milters,
+			require => Anchor["sendmail_installed"],
+		}
+		mailserver::sendmail::service{ $title:
+			port => $port,
+			instance => "$title",		
+		}
+	}
+	else {
+		mailserver::sendmail::service{ $title:
+			port => $port,
+			instance => "system",		
+		}
+	}
+}
+
+
+class mailserver::sendmail::submission(
+	$input_milters = [],
+)
+inherits mailserver::sendmail
+{
+	if $mailserver::sendmail::system {
+		$instance = 'default'
+	}
+	else {
+		$instance = 'submission'
+		mailserver::sendmail::instance{$instance:
+		}
+	}
+
+	mailserver::sendmail::service{ "submission":
+		port => 'submission',
+		instance => $instance,
+		require_auth => true,
+		input_milters => $input_milters,
+	}
+}
+
+class mailserver::sendmail::mx(
+	$input_milters = []
+)
+inherits mailserver::sendmail
+{
+	if $mailserver::sendmail::system {
+		$instance = 'default'
+	}
+	else {
+		$instance = 'smtp'
+		mailserver::sendmail::instance{$instance:
+		}
+	}
+
+	mailserver::sendmail::service{ "smtp":
+		port => 'smtp',
+		instance => $instance,
+		require_auth => false,
+		input_milters => $input_milters,
+	}
+}

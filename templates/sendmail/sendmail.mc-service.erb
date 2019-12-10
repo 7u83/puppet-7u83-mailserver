@@ -1,0 +1,24 @@
+dnl
+dnl ==== Service <%= @title %>
+dnl
+<%- 
+  ml = ""
+  komma = "" 
+  mods = ""
+  if not @etrn
+    mods = mods + "E"
+  end
+  if @require_auth 
+    mods = mods + "a"
+  end
+
+-%>
+<%- @input_milters.each do |milter| -%>
+MAIL_FILTER(`<%= milter %><%= @title %>', S=`<%= milter %>')dnl
+<%- 
+  ml = ml + komma + milter + @title 
+  komma = ";"
+-%>
+<%- end -%>
+DAEMON_OPTIONS(`Port=<%=@port%>, Name=<%=@title%>, M=<%= mods %>, InputMailFilters=<%= ml %>')dnl
+
