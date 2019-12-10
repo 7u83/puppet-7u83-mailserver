@@ -63,6 +63,25 @@ class mailserver (
 	$dkim_keyfile_source = undef,
 	$dkim_keyfile_content = undef,
 
+	#
+	# DMARC params
+	#
+	$dmarc_filter = true,
+
+	#
+	# SPAM
+	#
+	$spam_filter = true,
+	$spam_reject_score = undef,
+	$spam_greylist_score = undef,
+	$spam_add_header_score = undef,
+
+
+	$services = [
+		'submission',
+		'mx',
+	]
+
 ) inherits ::mailserver::params {
 
 
@@ -83,17 +102,57 @@ class mailserver (
 		$dkim_groups = []
 	}
 
+	if $dmarc_filter {
+		class {"mailserver::opendmarc":
+		}
+		$dmarc_milter = [$mailserver::opendmarc::milter_socket]
+	}
+	else {
+		$dmarc_filter = []
+	}
+
+
+	if $spam_filter {
+		class {"mailserver::rspamd":
+			reject_score => $spam_reject_score,
+			greylist_score => $spam_greylist_score,
+			add_header_score => $spam_add_header_score,
+		}
+		$spam_milter = [$mailserver::rspamd::milter_socket]
+	} 
+	else {
+		$spam_milter = []
+	}
+	
+
+	class {"mailserver::clamav":
+	}
+	$av_milter = [$mailserver::clamav::params::milter_sock]
+
+
         $mta_class = "::mailserver::${mta}"
 	class{ "$mta_class":
 		myhostname => $myhostname,
 		mydestination => $mydestination,
 		ldap => $ldap,
 		sasl => $sasl,
-		input_milters => concat ($dkim_milter,[],[]),
+		input_milters => concat ([$dkim_milter],[],[]),
 		groups => $dkim_groups,
 	}
 
-	
+	if 'submission' in $services {
+		class{ "${mta_class}::submission":
+			input_milters => concat ($dkim_milter,[],[])
+		}	
+	}
+
+	if 'smtp' in $services {
+		class{ "${mta_class}::mx":
+			input_milters => concat ($dkim_milter, $dmarc_milter,$spam_milter,$av_milter,[],[])
+		}	
+	}
+
+
 #	$x = inline_template("<%= scope.lookupvar(\"mailserver::${mta}::local_host_names\") %>")
 #	notify {"L: $x":}
 }
