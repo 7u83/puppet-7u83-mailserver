@@ -39,13 +39,15 @@ class mailserver::opendkim(
 	$gid = $mailserver::opendkim::params::gid,
 	$milter_sock = $mailserver::opendkim::params::milter_sock,
 	$pid_file = $mailserver::opendkim::params::pid_file,
+	$pkg_provider = $mailserver::params::pkg_provider,
 
 ) inherits mailserver::opendkim::params
 {
 
 
 	package { $pkg:
-		ensure => installed
+		ensure => installed,
+		provider => $pkg_provider
 	}
 
 	$dkmynetworks = join($mynetworks,", ")

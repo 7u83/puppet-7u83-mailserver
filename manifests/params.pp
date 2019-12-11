@@ -1,6 +1,8 @@
 #params
 
-class mailserver::params {
+class mailserver::params(
+	$pkg_provider = undef
+) {
         case $::osfamily {
                 'FreeBSD':{
 			$mta = 'sendmail'

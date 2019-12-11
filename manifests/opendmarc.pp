@@ -7,6 +7,7 @@ class mailserver::opendmarc(
 	$reject_failures = true,
 	$software_header = true,
 	$spf_self_validate = true,
+	$pkg_provider = $mailserver::params::pkg_provider,
 ) 
 {
         case $::osfamily {
@@ -19,7 +20,9 @@ class mailserver::opendmarc(
 
 			package { "$pkg":
 				ensure => installed,
-				require => Mailserver::Sysrc["opendmarc_socketspec"]
+				require => Mailserver::Sysrc["opendmarc_socketspec"],
+				provider => $pkg_provider,
+
 			}
 
 			mailserver::sysrc{"opendmarc_socketspec":
@@ -35,6 +38,7 @@ class mailserver::opendmarc(
 			$pid_file='/var/run/opendmarc/opendmarc.pid'
 			package { "$pkg":
 				ensure => installed
+				provider => $pkg_provider,
 			}
 
 		}
