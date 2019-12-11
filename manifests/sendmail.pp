@@ -84,6 +84,9 @@ inherits mailserver::sendmail::params
 		sasl => $sasl
 	}
 
+	$makemap_cmd = $mailserver::sendmail::install::makemap_cmd
+        $makealiases_cmd = $mailserver::sendmail::install::makealiases_cmd
+
 	if $system {
 		mailserver::sendmail::instance{'default':
 			input_milters => $input_milters,
@@ -152,6 +155,10 @@ class mailserver::sendmail::install(
 #			}
 
 			if $use_bsd_local {
+
+				$makemap_cmd = "/usr/sbin/makemapp"
+				$makealiases_cmd = "/usr/bin/newaliases"
+
 				$m4_cmd = '/usr/bin/m4 -D_CF_DIR_=/usr/share/sendmail/cf/   /usr/share/sendmail/cf/m4/cf.m4'
 				# use local
 				package {"sendmail":
@@ -172,6 +179,9 @@ class mailserver::sendmail::install(
 				anchor {"sendmail_pkg_installed":}
 			}
 			else {
+				$makemap_cmd = "/usr/local/sbin/makemapp"
+				$makealiases_cmd = "/usr/local/bin/newaliases"
+
 				$bindir_config = "define(`confEBINDIR', `/usr/local/libexec')dnl
 define(`UUCP_MAILER_PATH', `/usr/local/bin/uux')dnl"
 				$m4_cmd = '/usr/bin/m4 -D_CF_DIR_=/usr/local/share/sendmail/cf/   /usr/local/share/sendmail/cf/m4/cf.m4'
