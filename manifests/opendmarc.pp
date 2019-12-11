@@ -37,7 +37,7 @@ class mailserver::opendmarc(
 			$milter_socket = "/var/run/opendmarc/milter"
 			$pid_file='/var/run/opendmarc/opendmarc.pid'
 			package { "$pkg":
-				ensure => installed
+				ensure => installed,
 				provider => $pkg_provider,
 			}
 
