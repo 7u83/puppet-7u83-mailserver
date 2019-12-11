@@ -1,5 +1,5 @@
 #
-class mailserver::install_spawn_fcgi
+class mailserver::spawn_fcgi
 (
 	$app,
 	$app_args,
@@ -13,6 +13,7 @@ class mailserver::install_spawn_fcgi
 {
         case $::osfamily {
                 'FreeBSD':{
+			$service = "spawn-fcgi"
 			package {"spawn-fcgi":
 				ensure => installed
 			}
@@ -49,5 +50,14 @@ class mailserver::install_spawn_fcgi
 		default: {
  		}	
 	}
+
+	service {$service:
+		ensure => "running",
+		subscribe => [
+#			Class["mailserver::spawn_fcgi"]
+		],
+#		File[$sympa_conf]],
+	}
+
 
 }
