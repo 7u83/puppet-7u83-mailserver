@@ -53,7 +53,7 @@ OSTYPE(`<%= @ostype %>')
 DOMAIN(`<%= @mta_domain %>')
 <%= @bindir_config %>
 FEATURE(access_db, `hash -o -T<TMPF> /etc/mail/access')
-FEATURE(blacklist_recipients)
+FEATURE(blacklist_recipients.m4)
 FEATURE(local_lmtp)
 FEATURE(mailertable, `hash -o /etc/mail/mailertable')
 FEATURE(virtusertable, `hash -o /etc/mail/virtusertable')

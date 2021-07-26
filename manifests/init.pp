@@ -147,14 +147,12 @@ class mailserver (
 		$lists_aliases = []
 	}
 
-	notify{"MS ALI: $lists_aliases":}	
-
 	class {"mailserver::clamav":
 	}
 	$av_milter = [$mailserver::clamav::params::milter_sock]
 
 
-        $mta_class = "::mailserver::${mta}"
+  $mta_class = "::mailserver::${mta}"
 	class{ "$mta_class":
 		myhostname => $myhostname,
 		mydestination => $mydestination,

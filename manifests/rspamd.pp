@@ -61,6 +61,7 @@ class mailserver::rspamd(
 		"local.d/actions.conf",
 		"local.d/worker-normal.inc",
 		"local.d/worker-proxy.inc",
+		"local.d/worker-fuzzy.inc",
 	]
 
 

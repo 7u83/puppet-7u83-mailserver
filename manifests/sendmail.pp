@@ -1,28 +1,28 @@
 # sendmail
 
 class mailserver::sendmail::params(){
-        case $::osfamily {
-                'FreeBSD':{
-			$service = 'sendmail'
-			$etc_mail = '/etc/mail'
-			$mail_uid = 'mailnull'
-			$mail_gid = 'mailnull'
-			$ostype = 'freebsd6'
-			$mta_domain = 'generic'
-			$submit_domain = 'generic'
-			$pid_dir = "/var/run"
-		}
-		'Debian':{
-			$service = 'sendmail'
-			$etc_mail = '/etc/mail'
-			$ostype = 'debian'
-			$mail_uid = 'smmta'
-			$mail_gid = 'smmta'
-			$mta_domain = 'debian-mta'
-			$submit_domain = 'debian-msp'
-			$pid_dir = "/var/run"
-		}
-	}
+  case $::osfamily {
+    'FreeBSD':{
+  		$service = 'sendmail'
+      $etc_mail = '/etc/mail'
+  		$mail_uid = 'mailnull'
+  		$mail_gid = 'mailnull'
+  		$ostype = 'freebsd6'
+  		$mta_domain = 'generic'
+  		$submit_domain = 'generic'
+  		$pid_dir = "/var/run"
+  	}
+  	'Debian':{
+  		$service = 'sendmail'
+  		$etc_mail = '/etc/mail'
+  		$ostype = 'debian'
+  		$mail_uid = 'smmta'
+  		$mail_gid = 'smmta'
+  		$mta_domain = 'debian-mta'
+  		$submit_domain = 'debian-msp'
+  		$pid_dir = "/var/run"
+	  }
+  }
 
 	$local_host_names = "$etc_mail/local-host-names"
 	$sendmail_mc = "$etc_mail/sendmail.mc"
@@ -33,17 +33,16 @@ class mailserver::sendmail::params(){
 		"$etc_mail/aliases"
 	]
 
-        case $::osfamily {
-                'FreeBSD':{
-
-			file {"/etc/make.conf":
-				ensure => file,
+  case $::osfamily {
+    'FreeBSD':{
+      file {"/etc/make.conf":
+        ensure => file,
 			}
 			
 			file_line {"bsdmakeconf_sendmail":
 				ensure => present,
 				path => "/etc/make.conf",	
-				line => "SENDMAIL_MC=${sendmail_mc}i\t#created by puppet",
+				line => "SENDMAIL_MC=${sendmail_mc}\t#created by puppet",
 				match => "^SENDMAIL_MC.*=",
 				require => File["/etc/make.conf"]
 			}
