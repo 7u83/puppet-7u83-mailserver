@@ -163,7 +163,6 @@ class mailserver (
 		additional_alias_files => $lists_aliases,
 	}
 	$mta_aliases = inline_template("<%= scope.lookupvar(\"mailserver::${mta}::alias_files\") %>")
-	notify {"MAIL ALIASES: $mta_aliases":}
 
 
 	if 'lists' in $services {

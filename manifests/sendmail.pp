@@ -88,7 +88,7 @@ inherits mailserver::sendmail::params
 	}
 
 	$makemap_cmd = $mailserver::sendmail::install::makemap_cmd
-        $makealiases_cmd = $mailserver::sendmail::install::makealiases_cmd
+  $makealiases_cmd = $mailserver::sendmail::install::makealiases_cmd
 
 	if $system {
 		mailserver::sendmail::instance{'default':
@@ -108,8 +108,6 @@ inherits mailserver::sendmail::params
 #	}
 
 	$bindir_config = $::mailserver::sendmail::install::bindir_config
-
-
 
 	file {$submit_mc:
 		ensure => file,
@@ -146,8 +144,8 @@ class mailserver::sendmail::install(
 	$use_bsd_local = !($ldap or $sasl)
  
 	case $::osfamily {
-                'FreeBSD':{
-			ensure_resource("file","/usr/local/etc/mail",{
+    'FreeBSD':{
+		  ensure_resource("file","/usr/local/etc/mail",{
 				ensure => directory
 			})
 
