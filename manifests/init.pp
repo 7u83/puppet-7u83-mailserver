@@ -115,7 +115,7 @@ class mailserver (
 		$dmarc_milter = [$mailserver::opendmarc::milter_socket]
 	}
 	else {
-		$dmarc_filter = []
+		$dmarc_milter = []
 	}
 
 
