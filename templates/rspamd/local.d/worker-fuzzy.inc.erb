@@ -1,0 +1,15 @@
+# 
+# managed by puppet
+#
+
+#backend = "redis";
+
+# For sqlite stuff
+backend = "sqlite";
+hash_file = "${DBDIR}/fuzzy.db";
+
+expire = 90d;
+allow_update = ["localhost"];
+
+count = 1
+
