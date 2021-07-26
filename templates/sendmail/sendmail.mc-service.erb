@@ -14,9 +14,9 @@ dnl
 
 -%>
 <%- @input_milters.each do |milter| -%>
-MAIL_FILTER(`<%= milter %><%= @title %>', S=`<%= milter %>')dnl
+MAIL_FILTER(`<%= milter %>', S=`<%= milter %>')dnl
 <%- 
-  ml = ml + komma + milter + @title 
+  ml = ml + komma + milter  
   komma = ";"
 -%>
 <%- end -%>

@@ -14,11 +14,11 @@ domain	<%= @domain %>
 
 <% if @virtual %>
 sendmail_aliases <%= @sympa_transport %>
-aliases_program <%= @postmap_cmd %>
+aliases_program <%= @makemap_cmd %>
 #aliases_db_type = hash
 <%- else -%>
 sendmail_aliases <%= @sympa_sendmail_aliases %>
-aliases_program <%= @postalias_cmd %>
+aliases_program <%= @makealiases_cmd %>
 <% end %>
 
 dmarc_protection_mode <%= @sympa_dmarc_protection_mode %>
@@ -79,6 +79,7 @@ gecos <%= @gecos %>
 ## Type of the database
 ## Possible types are "MySQL", "PostgreSQL", "Oracle", "Sybase" and "SQLite".
 #db_type	mysql
+db_type <%= @_db_type %>
 
 ## db_host
 ## Hostname of the database server
@@ -86,7 +87,9 @@ gecos <%= @gecos %>
 ## "/var/run/postgresql" for connection with Unix domain socket.
 ## Example: db_host	localhost
 #db_host	localhost
+<%- if @db_host -%>
 db_host <%= @_db_host %>
+<%- end -%>
 
 ## db_port
 ## Port of the database server

@@ -76,11 +76,18 @@ class mailserver (
 	$spam_greylist_score = undef,
 	$spam_add_header_score = undef,
 
-
+	#
+	# general
+	#
 	$services = [
 		'submission',
-		'mx',
-	]
+		'smtp',
+		'lists',
+		'saslauthd',
+	],
+
+	$lists_domain = $myhostname,
+	$lists_master_email = undef,
 
 ) inherits ::mailserver::params {
 
@@ -123,7 +130,24 @@ class mailserver (
 	else {
 		$spam_milter = []
 	}
-	
+
+	if 'saslauthd' in $services {
+		$saslauthd_class = "::mailserver::${saslauthd}"
+		class {$saslauthd_class:
+		}
+	}
+
+
+	if 'lists' in $services {
+		notify{"lists":}
+		ensure_resource('class','mailserver::sympa::params',{})
+		$lists_aliases = [$mailserver::sympa::params::sympa_aliases]
+	}
+	else {
+		$lists_aliases = []
+	}
+
+	notify{"MS ALI: $lists_aliases":}	
 
 	class {"mailserver::clamav":
 	}
@@ -138,6 +162,18 @@ class mailserver (
 		sasl => $sasl,
 		input_milters => concat ([$dkim_milter],[],[]),
 		groups => $dkim_groups,
+		additional_alias_files => $lists_aliases,
+	}
+	$mta_aliases = inline_template("<%= scope.lookupvar(\"mailserver::${mta}::alias_files\") %>")
+	notify {"MAIL ALIASES: $mta_aliases":}
+
+
+	if 'lists' in $services {
+		class {"mailserver::sympa":
+			domain => $lists_domain,
+			listmaster => $lists_master_email,
+			web_url => "http://localhost:8080/sympa",
+		}
 	}
 
 	if 'submission' in $services {
@@ -151,7 +187,6 @@ class mailserver (
 			input_milters => concat ($dkim_milter, $dmarc_milter,$spam_milter,$av_milter,[],[])
 		}	
 	}
-
 
 #	$x = inline_template("<%= scope.lookupvar(\"mailserver::${mta}::local_host_names\") %>")
 #	notify {"L: $x":}

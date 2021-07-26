@@ -53,14 +53,14 @@ OSTYPE(`<%= @ostype %>')
 DOMAIN(`<%= @mta_domain %>')
 <%= @bindir_config %>
 <%- @input_milters.each do |milter| -%>
-INPUT_MAIL_FILTER(`<%= milter %>', S=`<%= milter %>')
+dnl INPUT_MAIL_FILTER(`<%= milter %>', S=`<%= milter %>')
 <%- end -%>
 FEATURE(access_db, `hash -o -T<TMPF> /etc/mail/access')
 FEATURE(blacklist_recipients)
 FEATURE(local_lmtp)
 FEATURE(mailertable, `hash -o /etc/mail/mailertable')
 FEATURE(virtusertable, `hash -o /etc/mail/virtusertable')
-define(`confDONT_BLAME_SENDMAIL',`GroupWritableDirPathSafe')
+define(`confDONT_BLAME_SENDMAIL',`GroupWritableDirPathSafe, GroupWritableAliasFile')
 dnl Enable STARTTLS for receiving email.
 define(`CERT_DIR', `/etc/mail/certs')dnl
 define(`confSERVER_CERT', `CERT_DIR/host.cert')dnl
@@ -106,3 +106,5 @@ define(`confPID_FILE',`<%= @pid_file %>')dnl
 define(`confBIND_OPTS', `WorkAroundBrokenAAAA')
 define(`confNO_RCPT_ACTION', `add-to-undisclosed')
 define(`confPRIVACY_FLAGS', `authwarnings,noexpn,novrfy')
+define(`ALIAS_FILE', `<%- k="" -%><%- @_alias_files.each do |aliasfile| -%>
+<%= k -%><%= aliasfile -%><%- k=", " -%><%- end -%>')

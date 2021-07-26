@@ -2,19 +2,54 @@
 # sympa.pp
 #
 
+class mailserver::sympa::params(
+	$pkg_provider = undef,
+	$db_type = "sqlite",
+	$db_host = undef,
+	$db_user = "sympa",
+	$db_passwd = "sympa",
+	$db_name = undef,
+
+) {
+        case $::osfamily {
+                'FreeBSD':{
+			$sqlite_db = "/var/db/sympa/sympa.sqlite3"
+			$sqlite_db_dir = "/var/db/sympa"
+			$mysql_db = 'sympa'
+			$sympa_user = "sympa"
+			$sympa_group = "sympa"
+			$sympa_aliases = "/usr/local/etc/sympa/sympa_aliases"
+			$sympa_sendmail_aliases ="/usr/local/etc/sympa/sympa_sendmail_aliases"
+
+			$libexec_dir="/usr/local/libexec/sympa"
+		}
+	}
+}
+
+
 class mailserver::sympa
 (
+	$mta = $::mailserver::mta,
+
 	$domain,
 	$stitle = undef,
 	$listmaster,
 	$web_url,
 
-	$localhost = undef,
+	$localhost = "localhost",
 
-	$db_user = "sympa",
-	$db_passwd = "sympa",
-	$db_name = "sympa",
-	$db_host = undef,
+	$db_user = $mailserver::sympa::params::db_user,
+	$db_passwd = $mailserver::sympa::params::db_passwd,
+	$db_host = $mailserver::sympa::params::db_host,
+	$db_type = $mailserver::sympa::params::db_type,
+	$db_name = $mailserver::sympa::params::db_name ? {
+		undef => $db_type ? {
+				'sqlite' => $mailserver::sympa::params::sqlite_db,
+				'mysql' => $mailserver::sympa::params::mysql_db,
+				default => undef, 
+			},
+		default => $mailserver::sympa::params::db_name
+		},
 
 	$virtual = false,
 	$virtual_domains = [],
@@ -25,21 +60,20 @@ class mailserver::sympa
 
 	$logo_html_definition = false,
 
-	$mailserver = "postfix",
+#	$mailserver = "postfix",
 	$fcgi_addr = false,
 	$dmarc_protection_mode = undef,
 )
-inherits mailserver::params
-
+inherits mailserver::sympa::params
 {
-	$_sympa_domain = $domain
 
-	if $localhost == undef {
-		$_localhost = "loclahost"
-	}
-	else{
-		$_localhost = $localhost
-	}
+	
+	$makealiases_cmd = inline_template("<%= scope.lookupvar(\"mailserver::${mta}::makealiases_cmd\") %>")
+	$makemap_cmd = inline_template("<%= scope.lookupvar(\"mailserver::${mta}::makemap_cmd\") %>")
+
+	notify {"SYMPA: ($mta) $makealiases_cmd, $makemap_cmd":} 	
+
+	$_sympa_domain = $domain
 
 	$sympa_dmarc_protection_mode = $dmarc_protection_mode ? {
 		"reject" => "dmarc_reject",
@@ -51,7 +85,12 @@ inherits mailserver::params
                 'FreeBSD':{
 			ensure_resource ("package","portupgrade",{})
 
-			$packages = ["p5-DBD-mysql","p5-CGI-Fast","mhonarc"]
+			$packages = [
+				"p5-DBD-SQLite",
+				"p5-DBD-mysql",
+				"p5-CGI-Fast",
+				"mhonarc"
+			]
 			
 			$sympa_dir = "/usr/local/etc/sympa"
 			$sympa_data_dir = '/usr/local/share/sympa/list_data'
@@ -83,6 +122,9 @@ inherits mailserver::params
 				package_settings => {
 					'APACHE' => false,
 					'FASTCGI' => true,
+					'SQLITE' => ('sqlite' == $db_type),
+					'MYSQL' => ('mysql' == $db_type),
+					
 				},
 				require => [Package["portupgrade"],Package[$packages]],
 			}
@@ -125,32 +167,60 @@ inherits mailserver::params
 
 	$sympa_conf = "$sympa_dir/sympa.conf"
 
-	# if no db host is given install a local mysql server
-	if $db_host == undef {
-		$_db_host = "$_localhost"
-		include '::mysql::server'
-		mysql::db { "$db_name":
-			user     => "$db_user",
-			password => "$db_passwd",
-			host     => "$_db_host",
-			grant    => ['ALL'],
+        case $db_type {
+		'mysql':{
+			$_db_type = 'mysql'	
+			# if no db host is given install a local mysql server
+			if $db_host == undef {
+				$_db_host = "$localhost"
+				include '::mysql::server'
+				mysql::db { "$db_name":
+					user     => "$db_user",
+					password => "$db_passwd",
+					host     => "$_db_host",
+					grant    => ['ALL'],
+				}
+				exec {"$sympa_health_check":
+					refreshonly => true,
+					subscribe => [File["$sympa_conf"],Mysql::Db[$db_name]],
+					require => [File["$sympa_conf"],Mysql::Db[$db_name]],
+				}
+			} 
+			else {
+				$_db_host = $db_host
+				exec {"$sympa_health_check":
+					refreshonly => true,
+					subscribe => File["$sympa_conf"],
+					require => File["$sympa_conf"]
+				}
+			}
 		}
-		exec {"$sympa_health_check":
-			refreshonly => true,
-			subscribe => [File["$sympa_conf"],Mysql::Db[$db_name]],
-			require => [File["$sympa_conf"],Mysql::Db[$db_name]],
+		'sqlite':{
+			$_db_type = 'SQLite'
+			file {$sqlite_db_dir:
+				ensure => directory,
+				owner => $sympa_user,
+				group => $sympa_group,
+				mode => "600",
+				require => [
+					Package[$packages]
+				] 
+			} -> 
+			file {$sqlite_db:
+				ensure => file,
+				owner => $sympa_user,
+				group => $sympa_group,
+				mode => "600",
+			} 
+
+			exec {"$sympa_health_check":
+				refreshonly => true,
+				subscribe => File["$sympa_conf"],
+				require => File["$sympa_conf"]
+			}
 		}
-	} 
-	else {
-		$_db_host = $db_host
-		exec {"$sympa_health_check":
-			refreshonly => true,
-			subscribe => File["$sympa_conf"],
-			require => File["$sympa_conf"]
-		}
+
 	}
-
-
 
 	file {"$sympa_dir":
 		ensure => directory,
@@ -173,7 +243,7 @@ inherits mailserver::params
 		require => Exec["$sympa_health_check"]
 	}
 	
-	Class {"mailserver::sympa::postfix":}
+#	Class {"mailserver::sympa::postfix":}
 
 
 
@@ -266,7 +336,7 @@ inherits mailserver::params
 
 
 
-	class {"mailserver::install_spawn_fcgi":
+	class {"mailserver::spawn_fcgi":
 		username => "sympa",
 		groupname => "sympa",
 		app => "$perl",		
@@ -277,14 +347,67 @@ inherits mailserver::params
 		bindport => $sympa_fcgi_port,
 	}
 
-	service {"$spawn_fcgi_service":
-		ensure => "running",
-		require => Class["mailserver::install_spawn_fcgi"],
-		subscribe => [Class["mailserver::install_spawn_fcgi"],File[$sympa_conf]],
+ 
+	class {"mailserver::sympa::sendmail":
 	}
 
- 
+}
 
+class mailserver::sympa::sendmail()
+inherits mailserver::sympa
+{
+	file {$sympa_sendmail_aliases:
+		ensure => file,
+		owner => $sympa_user,
+		group => $sympa_group,
+		mode => "640",
+		require => Class["mailserver::sympa"],
+	}->
+	file {"$sympa_sendmail_aliases.db":
+		ensure => file,
+		owner => $sympa_user,
+		group => $sympa_group,
+		mode => "640",
+		require => Class["mailserver::sympa"],
+	}  
+
+
+	file {"$sympa_dir/list_aliases.tt2":
+		ensure => present,
+		source => "puppet:///modules/mailserver/sympa_list_aliases.tt2",
+		owner => "sympa",
+		require => Class["mailserver::sympa"],
+	}
+
+
+	file {$sympa_aliases:
+		ensure => file,
+#		owner => $sympa_user,
+#		group => $sympa_group,
+		mode => "640",
+		require => Class["mailserver::sympa"],
+		content => template("mailserver/sympa/sympa_alias.erb"),
+	}->
+	file {"$sympa_aliases.db":
+		ensure => file,
+#		owner => $sympa_user,
+#		group => $sympa_group,
+		mode => "640",
+		require => Class["mailserver::sympa"],
+	}  
+
+
+	exec {"$makealiases_cmd $sympa_aliases":
+		refreshonly => true,
+		subscribe => [
+			File["$sympa_conf"],
+			File[$sympa_sendmail_aliases]
+		],
+		require => [
+			File[$sympa_conf],
+			File[$sympa_sendmail_aliases]
+		]
+	}	
 
 }
 

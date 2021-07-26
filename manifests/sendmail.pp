@@ -29,6 +29,9 @@ class mailserver::sendmail::params(){
 	$sendmail_cf = "$etc_mail/sendmail.cf"
 	$submit_mc = "$etc_mail/submit.mc"
 	$submit_cf = "$etc_mail/submit.cf"
+	$alias_files = [
+		"$etc_mail/aliases"
+	]
 
         case $::osfamily {
                 'FreeBSD':{
@@ -75,7 +78,8 @@ class mailserver::sendmail(
 	$pid_dir = $mailserver::sendmail::params::pid_dir,
 
 	$system = true,
-
+	$alias_files = $mailserver::sendmail::params::alias_files,
+	$additional_alias_files = [],
 )
 inherits mailserver::sendmail::params
 {
@@ -248,12 +252,15 @@ define(`UUCP_MAILER_PATH', `/usr/local/bin/uux')dnl"
 define mailserver::sendmail::instance(
 	$myhostname = $mailserver::sendmail::myhostname,
 	$input_milters = [],
+	$alias_files = $mailserver::sendmail::alias_files,
+	$additional_alias_files = $mailserver::sendmail::additional_alias_files,
 
 ){
 	if $title != 'default' {
 		$instance_name = "-$title"
 	}
 
+	$_alias_files = concat( $alias_files, $additional_alias_files,[])
 
 	$service = "sendmail${instance_name}"
 	$pid_file = "${mailserver::sendmail::pid_dir}/sendmail${instance_name}.pid"
@@ -265,7 +272,6 @@ define mailserver::sendmail::instance(
 	$bindir_config = "${mailserver::sendmail::install::bindir_config}"
 	$local_host_names = "${mailserver::sendmail::local_host_names}"
 
-	
 	if $title != 'default' {
 		$status_cmd = "/bin/test -f $pid_file && ps -Ao pid | grep `head -1 $pid_file`"
 		$stop_cmd = " ( /bin/test -f $pid_file && kill `head -1 $pid_file` ) || /usr/bin/true"
@@ -384,7 +390,7 @@ inherits mailserver::sendmail
 }
 
 class mailserver::sendmail::mx(
-	$input_milters = []
+	$input_milters = [],
 )
 inherits mailserver::sendmail
 {
