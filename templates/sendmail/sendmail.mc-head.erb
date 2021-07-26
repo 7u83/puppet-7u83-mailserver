@@ -101,6 +101,8 @@ FEATURE(`no_default_msa')dnl
 dnl Enable for both IPv4 and IPv6 (optional)
 dnl DAEMON_OPTIONS(`Port=<%= @port %>, Name=IPv4, Family=inet') dnl
 dnl DAEMON_OPTIONS(`Name=IPv6, Family=inet6, Modifiers=O') dnl
+dnl set SASL options
+TRUST_AUTH_MECH(`GSSAPI DIGEST-MD5 CRAM-MD5 LOGIN PLAIN')dnl
 define(`confAUTH_MECHANISMS', `LOGIN PLAIN')dnl
 define(`confPID_FILE',`<%= @pid_file %>')dnl
 define(`confBIND_OPTS', `WorkAroundBrokenAAAA')
