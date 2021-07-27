@@ -33,6 +33,12 @@ class mailserver::sendmail::params(){
 		"$etc_mail/aliases"
 	]
 
+  $cert_dir = "$etc_mail/certs"
+  $server_cert = "CERT_DIR/host.cert"
+  $server_key = "CERT_DIR/host.key"
+  $cacert = "CERT_DIR/cacert.pem"
+
+
   case $::osfamily {
     'FreeBSD':{
       file {"/etc/make.conf":
@@ -79,6 +85,8 @@ class mailserver::sendmail(
 	$system = true,
 	$alias_files = $mailserver::sendmail::params::alias_files,
 	$additional_alias_files = [],
+
+  
 )
 inherits mailserver::sendmail::params
 {
@@ -268,6 +276,11 @@ define mailserver::sendmail::instance(
 	$mta_domain = "$mailserver::sendmail::mta_domain"
 	$bindir_config = "${mailserver::sendmail::install::bindir_config}"
 	$local_host_names = "${mailserver::sendmail::local_host_names}"
+
+	$cert_dir  = "${mailserver::sendmail::cert_dir}"
+	$server_cert  = "${mailserver::sendmail::server_cert}"
+	$server_key  = "${mailserver::sendmail::server_key}"
+	$cacert  = "${mailserver::sendmail::cacert}"
 
 	if $title != 'default' {
 		$status_cmd = "/bin/test -f $pid_file && ps -Ao pid | grep `head -1 $pid_file`"
