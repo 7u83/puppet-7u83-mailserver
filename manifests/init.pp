@@ -168,6 +168,15 @@ class mailserver (
 	$mta_aliases = inline_template("<%= scope.lookupvar(\"mailserver::${mta}::alias_files\") %>")
 
 
+  $imap_class = "::mailserver::${imap}"
+  if "imap" in $services {
+    class {"$imap_class":
+
+    }
+  }
+
+
+
 	if 'lists' in $services {
 		class {"mailserver::sympa":
 			domain => $lists_domain,
