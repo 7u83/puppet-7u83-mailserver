@@ -86,6 +86,9 @@ class mailserver (
 		'saslauthd',
 	],
 
+  $smtp_server_cert = undef,
+  $smtp_server_key = undef,
+
 	$lists_domain = $myhostname,
 	$lists_master_email = undef,
 
@@ -181,7 +184,10 @@ class mailserver (
 
 	if 'smtp' in $services {
 		class{ "${mta_class}::mx":
-			input_milters => concat ($dkim_milter, $dmarc_milter,$spam_milter,$av_milter,[],[])
+			input_milters => concat ($dkim_milter, $dmarc_milter,
+        $spam_milter,$av_milter,[],[]),
+      server_cert => $smtp_server_cert,
+      server_key => $smtp_server_key,
 		}	
 	}
 

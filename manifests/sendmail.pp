@@ -1,6 +1,14 @@
 # sendmail
 
-class mailserver::sendmail::params(){
+class mailserver::sendmail::params
+(
+  $server_cert = "CERT_DIR/host.cert",
+  $server_key = "CERT_DIR/host.key",
+  $cacert = "CERT_DIR/cacert.pem",
+  $cacert_path = "CERT_DIR",
+  $system = true,
+  
+){
   case $::osfamily {
     'FreeBSD':{
   		$service = 'sendmail'
@@ -24,6 +32,8 @@ class mailserver::sendmail::params(){
 	  }
   }
 
+  $cert_dir = "$etc_mail/certs"
+
 	$local_host_names = "$etc_mail/local-host-names"
 	$sendmail_mc = "$etc_mail/sendmail.mc"
 	$sendmail_cf = "$etc_mail/sendmail.cf"
@@ -32,12 +42,6 @@ class mailserver::sendmail::params(){
 	$alias_files = [
 		"$etc_mail/aliases"
 	]
-
-  $cert_dir = "$etc_mail/certs"
-  $server_cert = "CERT_DIR/host.cert"
-  $server_key = "CERT_DIR/host.key"
-  $cacert = "CERT_DIR/cacert.pem"
-
 
   case $::osfamily {
     'FreeBSD':{
@@ -82,7 +86,7 @@ class mailserver::sendmail(
 
 	$pid_dir = $mailserver::sendmail::params::pid_dir,
 
-	$system = true,
+	$system = $mailserver::sendmail::params::system,
 	$alias_files = $mailserver::sendmail::params::alias_files,
 	$additional_alias_files = [],
 
@@ -100,7 +104,6 @@ inherits mailserver::sendmail::params
 
 	if $system {
 		mailserver::sendmail::instance{'default':
-			input_milters => $input_milters,
 			require => Anchor["sendmail_installed"],
 		}
 	}
@@ -260,6 +263,12 @@ define mailserver::sendmail::instance(
 	$alias_files = $mailserver::sendmail::alias_files,
 	$additional_alias_files = $mailserver::sendmail::additional_alias_files,
 
+	$cert_dir  = "${mailserver::sendmail::cert_dir}",
+	$server_cert  = "${mailserver::sendmail::server_cert}",
+	$server_key  = "${mailserver::sendmail::server_key}",
+	$cacert  = "${mailserver::sendmail::cacert}",
+	$cacert_path  = "${mailserver::sendmail::cacert_path}",
+
 ){
 	if $title != 'default' {
 		$instance_name = "-$title"
@@ -276,11 +285,6 @@ define mailserver::sendmail::instance(
 	$mta_domain = "$mailserver::sendmail::mta_domain"
 	$bindir_config = "${mailserver::sendmail::install::bindir_config}"
 	$local_host_names = "${mailserver::sendmail::local_host_names}"
-
-	$cert_dir  = "${mailserver::sendmail::cert_dir}"
-	$server_cert  = "${mailserver::sendmail::server_cert}"
-	$server_key  = "${mailserver::sendmail::server_key}"
-	$cacert  = "${mailserver::sendmail::cacert}"
 
 	if $title != 'default' {
 		$status_cmd = "/bin/test -f $pid_file && ps -Ao pid | grep `head -1 $pid_file`"
@@ -401,6 +405,9 @@ inherits mailserver::sendmail
 
 class mailserver::sendmail::mx(
 	$input_milters = [],
+  $server_cert = undef,
+  $server_key = undef,
+  $cacert_path = undef,
 )
 inherits mailserver::sendmail
 {
