@@ -168,9 +168,9 @@ class mailserver (
 	$mta_aliases = inline_template("<%= scope.lookupvar(\"mailserver::${mta}::alias_files\") %>")
 
 
-  $imap_class = "::mailserver::${imap}"
+  $imapd_class = "::mailserver::${imapd}"
   if "imap" in $services {
-    class {"$imap_class":
+    class {"$imapd_class":
 
     }
   }
