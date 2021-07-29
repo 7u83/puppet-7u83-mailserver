@@ -5,7 +5,10 @@ class mailserver::cyrus::params(){
   case $::osfamily {
     'FreeBSD':{
 			$cfg_dir = "/usr/local/etc"
-			$pkg_name = "cyrus-imapd30"
+			$pkg_name = "cyrus-imapd34"
+      $db_dir = "/var/imap"
+      $cyrus_user = "cyrus"
+      $mkimapcmd = "/usr/local/cyrus/sbin/mkimap"
 		}
 	}
 	$cyrus_conf = "$cfg_dir/cyrus.conf"
@@ -63,9 +66,10 @@ inherits mailserver::cyrus
   file{$imapd_conf:
     ensure =>  file,
     content => template("mailserver/cyrus/imapd.conf.erb"),
-   }
-  
-	anchor {"cyrus_pkg_installed":}
-  
+  } ->
+  exec {"$mkimapcmd":
+    creates => $db_dir 
+  }
 
+ 	anchor {"cyrus_pkg_installed":}
 }
