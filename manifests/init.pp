@@ -95,6 +95,8 @@ class mailserver (
   $imap_server_cert = undef,
   $imap_server_key = undef,
 
+  $av = false,
+
 ) inherits ::mailserver::params {
 
 
@@ -153,9 +155,19 @@ class mailserver (
 		$lists_aliases = []
 	}
 
+  #
+  # install or deinstall clamav
+  #
+  if $av {
+    $av_ensure = installed
+	  $av_milter = [$mailserver::clamav::params::milter_sock]
+  }
+  else {
+    $av_ensure = absent
+  }
 	class {"mailserver::clamav":
+    ensure => $av_ensure
 	}
-	$av_milter = [$mailserver::clamav::params::milter_sock]
 
 
   $mta_class = "::mailserver::${mta}"

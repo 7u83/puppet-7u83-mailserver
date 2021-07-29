@@ -63,44 +63,58 @@ class mailserver::clamav(
 
 ) inherits mailserver::clamav::params{
 
-	package {$packages:
-		ensure => $ensure
-	} ->
-	file {$freshclam_conf:
-		ensure => file,
-		content => template('mailserver/clamav/freshclam.conf.erb')
-	} ->
-	exec {"$freshclam":
-		creates => "$freshclam_file",
-		timeout => 600,
-	} 
+  if $ensure == 'installed'{
+  	package {$packages:
+  		ensure => $ensure
+  	} ->
+  	file {$freshclam_conf:
+  		ensure => file,
+  		content => template('mailserver/clamav/freshclam.conf.erb')
+  	} ->
+  	exec {"$freshclam":
+  		creates => "$freshclam_file",
+  		timeout => 600,
+  	} 
 
-	service {"$freshclam_service":
-		ensure => running,
-		require => [
-			Exec["$freshclam"]
-		], 
-	}
+  	service {"$freshclam_service":
+  		ensure => running,
+  		require => [
+  			Exec["$freshclam"]
+  		], 
+  	}
 
-	file { "$milter_conf":
-		ensure => present,
-		content => template("mailserver/clamav-milter.conf.erb"),
-		require => Package[$packages]
-	} ->
-	service {"$milter_service":
-		ensure => running,
-		require => [
-			Service["$clamd_service"]
-		],
-		subscribe => File["$milter_conf"],
-	}
-
-
-	service {"$clamd_service":
-		ensure => running,
-		require => [
-			Exec["$freshclam"],
-		]
-	}
+  	file { "$milter_conf":
+  		ensure => present,
+  		content => template("mailserver/clamav-milter.conf.erb"),
+  		require => Package[$packages]
+  	} ->
+  	service {"$milter_service":
+  		ensure => running,
+  		require => [
+  			Service["$clamd_service"]
+  		],
+  		subscribe => File["$milter_conf"],
+  	}
+  	service {"$clamd_service":
+  		ensure => running,
+  		require => [
+  			Exec["$freshclam"],
+  		]
+  	}
+  }
+  else {
+  	service {"$freshclam_service":
+  		ensure => stopped,
+  	}->
+  	service {"$clamd_service":
+  		ensure => stopped,
+  	}->
+   	service {"$milter_service":
+  		ensure => stopped,
+    }
+    package {$packages:
+  		ensure => $ensure 
+  	} 
+  }
 }
 
