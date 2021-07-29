@@ -96,7 +96,11 @@ class mailserver (
   $imap_server_key = undef,
 
   $imap_sieve = undef,
-  $av = false,
+  $av = true,
+
+  $local_lmtp_host = undef,
+  $local_lmtp_port = 24,
+
 
 ) inherits ::mailserver::params {
 
@@ -161,7 +165,6 @@ class mailserver (
   #
   if $av {
     $av_ensure = installed
-	  $av_milter = [$mailserver::clamav::params::milter_sock]
   }
   else {
     $av_ensure = absent
@@ -169,6 +172,7 @@ class mailserver (
 	class {"mailserver::clamav":
     ensure => $av_ensure
 	}
+	  $av_milter = [$mailserver::clamav::params::milter_sock]
 
 
   $mta_class = "::mailserver::${mta}"
@@ -187,7 +191,7 @@ class mailserver (
   $imapd_class = "::mailserver::${imapd}"
   if "imap" in $services {
     class {"$imapd_class":
-      sieve = $imap_sieve,
+      sieve => $imap_sieve,
     }
   }
 

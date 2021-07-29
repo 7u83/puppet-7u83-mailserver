@@ -60,6 +60,9 @@ FEATURE(blacklist_recipients)
 FEATURE(local_lmtp)
 FEATURE(mailertable, `hash -o /etc/mail/mailertable')
 FEATURE(virtusertable, `hash -o /etc/mail/virtusertable')
+<%- if @local_lmtp_host -%>
+FEATURE(`local_lmtp',`[IPC]',`TCP [<%= @local_lmtp_host %>] <%= @local_lmtp_port %>')dnl
+<%- end -%>
 define(`confDONT_BLAME_SENDMAIL',`GroupWritableDirPathSafe, GroupWritableAliasFile')
 dnl Enable STARTTLS for receiving email.
 define(`CERT_DIR', `<%= @cert_dir %>')dnl

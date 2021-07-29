@@ -286,6 +286,10 @@ define mailserver::sendmail::instance(
 	$bindir_config = "${mailserver::sendmail::install::bindir_config}"
 	$local_host_names = "${mailserver::sendmail::local_host_names}"
 
+  $local_lmtp_host = "${mailserver::local_lmtp_host}"
+  $local_lmtp_port = "${mailserver::local_lmtp_port}"
+
+
 	if $title != 'default' {
 		$status_cmd = "/bin/test -f $pid_file && ps -Ao pid | grep `head -1 $pid_file`"
 		$stop_cmd = " ( /bin/test -f $pid_file && kill `head -1 $pid_file` ) || /usr/bin/true"
