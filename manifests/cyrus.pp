@@ -10,6 +10,8 @@ class mailserver::cyrus::params(){
 	}
 	$cyrus_conf = "$cfg_dir/cyrus.conf"
 	$imapd_conf = "$cfg_dir/imapd.conf"
+  $imap_server_cert = $::mailserver::imap_server_cert
+  $imap_server_key = $::mailserver::imap_server_key
 }
 
 class mailserver::cyrus(
@@ -53,7 +55,17 @@ inherits mailserver::cyrus
 {
   package {$pkg_name:
     ensure => installed
-  }
+  } ->
+  file{$cyrus_conf:
+    ensure =>  file,
+    content => template("mailserver/cyrus/cyrus.conf.erb"),
+  } ->
+  file{$imapd_conf:
+    ensure =>  file,
+    content => template("mailserver/cyrus/imapd.conf.erb"),
+   }
+  
 	anchor {"cyrus_pkg_installed":}
+  
 
 }

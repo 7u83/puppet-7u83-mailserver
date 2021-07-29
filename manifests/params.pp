@@ -7,7 +7,7 @@ class mailserver::params(
     'FreeBSD':{
 			$mta = 'sendmail'
 			$saslauthd = 'cyrus::saslauthd'
-			$imapd = 'uwimap'
+			$imapd = 'cyrus'
 		}
 		'Debian': {
 			$mta = 'postfix'

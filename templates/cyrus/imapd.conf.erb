@@ -346,11 +346,21 @@ sasl_mech_list: plain
 # pop3, lmtp).
 #
 #tls_server_cert: <none>
+<%- if @imap_server_cert -%>
+tls_server_cert: <%= @imap_server_cert %>
+<%- end %>
 
 # File containing the private key belonging to the global server
 # certificate.
 #
 #tls_server_key: <none>
+<%- if @imap_server_key -%>
+tls_server_key: <%= @imap_server_key %>
+<%- end %>
+
+tls_required: 1
+#tls_ciphers: EDH+CAMELLIA:EDH+aRSA:EECDH+aRSA+AESGCM:EECDH+aRSA+SHA256:EECDH:+CAMELLIA128:+AES128:+SSLv3:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!DSS:!RC4:!SEED:!IDEA:!ECDSA:kEDH:CAMELLIA128-SHA:AES128-SHA
+
 
 # File containing one or more Certificate Authority (CA) certificates.
 #
