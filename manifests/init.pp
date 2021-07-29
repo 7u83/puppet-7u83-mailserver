@@ -95,6 +95,10 @@ class mailserver (
   $imap_server_cert = undef,
   $imap_server_key = undef,
 
+
+  $imap_sieve = undef,
+
+
 ) inherits ::mailserver::params {
 
 
@@ -174,6 +178,7 @@ class mailserver (
   $imapd_class = "::mailserver::${imapd}"
   if "imap" in $services {
     class {"$imapd_class":
+      sieve = $imap_sieve,
     }
   }
 

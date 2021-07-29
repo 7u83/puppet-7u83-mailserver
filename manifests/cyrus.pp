@@ -18,7 +18,7 @@ class mailserver::cyrus(
 	$pkg_name = $mailserver::cyrus::params::pkg_name,
 	$pkg_version = "latest",
 	$pkg_settings = undef,
-
+  $sieve = undef,
 )
 inherits mailserver::cyrus::params
 {
