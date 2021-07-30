@@ -77,6 +77,7 @@ class mailserver (
 	$spam_add_header_score = undef,
 
   $spam_control_secure_ips = [],
+  $spam_fuzzy_allow_update = "localhost",
 
 	#
 	# general
@@ -140,6 +141,7 @@ class mailserver (
       greylist_score     => $spam_greylist_score,
       add_header_score   => $spam_add_header_score,
       control_secure_ips => $spam_control_secure_ips,
+      fuzzy_allow_update => $spam_fuzzy_allow_update, 
 		}
 		$spam_milter = [$mailserver::rspamd::milter_socket]
 	} 

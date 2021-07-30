@@ -47,7 +47,7 @@ class mailserver::rspamd::params
 	}	
 
   $db_backend = 'sqlite3'
-
+  $fuzzy_db_backend = 'sqlite'
 }
 
 class mailserver::rspamd(
@@ -55,46 +55,50 @@ class mailserver::rspamd(
 	$greylist_score = undef,
 	$add_header_score = undef,
   $control_secure_ips = [
-  ]
-) inherits mailserver::rspamd::params
-{
-	$local_dir = "$cfg_dir/local.d"
+  ],
+  $fuzzy_allow_update = "localhost",
+  $local_fuzzy_servers = "localhost:11335"
 
-	$cfgfiles = [
-		"local.d/milter_headers.conf",
-		"local.d/actions.conf",
-		"local.d/worker-normal.inc",
-		"local.d/worker-proxy.inc",
-		"local.d/worker-controller.inc",
-		"local.d/classifier-bayes.conf",
-		"local.d/worker-fuzzy.inc",
-	]
+  ) inherits mailserver::rspamd::params
+  {
+    $local_dir = "$cfg_dir/local.d"
 
-	file {"$local_dir":
-		ensure => directory,
-		require => Package[$pkg]
-	}
+    $cfgfiles = [
+      "local.d/milter_headers.conf",
+      "local.d/actions.conf",
+      "local.d/worker-normal.inc",
+      "local.d/worker-proxy.inc",
+      "local.d/worker-controller.inc",
+      "local.d/classifier-bayes.conf",
+      "local.d/worker-fuzzy.inc",
+      "local.d/fuzzy_check.conf",
+    ]
 
-	class {"mailserver::rspamd::update_cfgfiles":}
+    file {"$local_dir":
+      ensure => directory,
+      require => Package[$pkg]
+    }
 
-	service {"$service":
-		ensure => running,
-		require => Class["mailserver::rspamd::update_cfgfiles"],
-		subscribe => Class["mailserver::rspamd::update_cfgfiles"],
-	}
+    class {"mailserver::rspamd::update_cfgfiles":}
 
-}
+    service {"$service":
+      ensure => running,
+      require => Class["mailserver::rspamd::update_cfgfiles"],
+      subscribe => Class["mailserver::rspamd::update_cfgfiles"],
+    }
+
+  }
 
 
-class mailserver::rspamd::update_cfgfiles()
-inherits mailserver::rspamd{
+  class mailserver::rspamd::update_cfgfiles()
+  inherits mailserver::rspamd{
 
-	$cfgfiles.each | String $file | {
-		file { "$cfg_dir/$file":
-			ensure => file,
-			content => template("mailserver/rspamd/$file.erb"),
-			require => File["$local_dir"],
-		}
-	}
-}
+    $cfgfiles.each | String $file | {
+      file { "$cfg_dir/$file":
+        ensure => file,
+        content => template("mailserver/rspamd/$file.erb"),
+        require => File["$local_dir"],
+      }
+    }
+  }
 

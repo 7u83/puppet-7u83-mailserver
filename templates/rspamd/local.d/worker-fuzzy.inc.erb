@@ -1,15 +1,12 @@
 # 
 # managed by puppet
 #
-
-#backend = "redis";
-
-# For sqlite stuff
+<% if @fuzzy_db_backend == "sqlite" %>
 backend = "sqlite";
-hash_file = "${DBDIR}/fuzzy.db";
-
+hash_file = "${DBDIR}/fuzzy.sqlite";
 expire = 90d;
-allow_update = ["localhost"];
-
 count = 1
+<% end %>
+allow_update = [<%= @fuzzy_allow_update %>];
+
 
