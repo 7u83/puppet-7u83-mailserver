@@ -1,0 +1,13 @@
+<%- if @db_backend == 'sqlite3' -%>
+backend = "sqlite3"
+statfile {
+  symbol = "BAYES_HAM";
+  spam = false;
+  path = "${DBDIR}/bayes.ham.sqlite";
+}
+statfile {
+  symbol = "BAYES_SPAM";
+  spam = true;
+  path = "${DBDIR}/bayes.spam.sqlite";
+}
+<% end %>

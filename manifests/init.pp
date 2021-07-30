@@ -76,6 +76,8 @@ class mailserver (
 	$spam_greylist_score = undef,
 	$spam_add_header_score = undef,
 
+  $spam_control_secure_ips = [],
+
 	#
 	# general
 	#
@@ -134,9 +136,10 @@ class mailserver (
 
 	if $spam_filter {
 		class {"mailserver::rspamd":
-			reject_score => $spam_reject_score,
-			greylist_score => $spam_greylist_score,
-			add_header_score => $spam_add_header_score,
+      reject_score       => $spam_reject_score,
+      greylist_score     => $spam_greylist_score,
+      add_header_score   => $spam_add_header_score,
+      control_secure_ips => $spam_control_secure_ips,
 		}
 		$spam_milter = [$mailserver::rspamd::milter_socket]
 	} 

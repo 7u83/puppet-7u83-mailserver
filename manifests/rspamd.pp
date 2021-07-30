@@ -1,18 +1,13 @@
 #
 # rspamd.pp
 #
-
-class mailserver::rspamd(
-	$reject_score = undef,
-	$greylist_score = undef,
-	$add_header_score = undef,
-)
+#
+class mailserver::rspamd::params
 {
-        case $::osfamily {
+  case $::osfamily {
 
-                'FreeBSD':{
-			ensure_resource ("package","portupgrade",{
-			})
+    'FreeBSD':{
+      ensure_resource ("package","portupgrade",{})
 
 			$pkg = "rspamd"
 			$service = "rspamd"
@@ -26,8 +21,6 @@ class mailserver::rspamd(
 
 		}
 		'Debian': {
-
-
 			$pkg = "rspamd"
 			$service = "rspamd"
 			$cfg_dir = "/etc/rspamd"
@@ -50,10 +43,21 @@ class mailserver::rspamd(
 				ensure => 'installed',
 				require => Apt::Source['rspamd_source'],
 			}
-
 		}
 	}	
 
+  $db_backend = 'sqlite3'
+
+}
+
+class mailserver::rspamd(
+	$reject_score = undef,
+	$greylist_score = undef,
+	$add_header_score = undef,
+  $control_secure_ips = [
+  ]
+) inherits mailserver::rspamd::params
+{
 	$local_dir = "$cfg_dir/local.d"
 
 	$cfgfiles = [
@@ -61,9 +65,10 @@ class mailserver::rspamd(
 		"local.d/actions.conf",
 		"local.d/worker-normal.inc",
 		"local.d/worker-proxy.inc",
+		"local.d/worker-controller.inc",
+		"local.d/classifier-bayes.conf",
 		"local.d/worker-fuzzy.inc",
 	]
-
 
 	file {"$local_dir":
 		ensure => directory,
