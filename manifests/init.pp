@@ -83,10 +83,10 @@ class mailserver (
 	# general
 	#
 	$services = [
-		'submission',
-		'smtp',
-		'lists',
-		'saslauthd',
+    #'submission',
+    #'smtp',
+    #'lists',
+    #'saslauthd',
 	],
 
   $smtp_server_cert = undef,
