@@ -103,15 +103,15 @@ class mailserver::clamav(
   	}
   }
   else {
-  	service {"$freshclam_service":
-  		ensure => stopped,
-  	}->
-  	service {"$clamd_service":
-  		ensure => stopped,
-  	}->
-   	service {"$milter_service":
-  		ensure => stopped,
-    }
+    #  	service {"$freshclam_service":
+    #		ensure => stopped,
+    #}->
+    #service {"$clamd_service":
+    #	ensure => stopped,
+    #}->
+    #service {"$milter_service":
+    #	ensure => stopped,
+    #}
     package {$packages:
   		ensure => $ensure 
   	} 
