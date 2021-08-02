@@ -15,7 +15,7 @@ class mailserver::opendmarc(
 			$conf = "/usr/local/etc/mail/opendmarc.conf"
 			$pkg = "opendmarc"
 			$service = "opendmarc"
-			$milter_socket = "/var/run/opendmarc/milter"
+			$milter_socket = "unix:/var/run/opendmarc/milter"
 			$pid_file='/var/run/opendmarc/opendmarc.pid'
 
 			package { "$pkg":

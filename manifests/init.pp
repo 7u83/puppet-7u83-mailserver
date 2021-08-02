@@ -99,7 +99,7 @@ class mailserver (
   $imap_server_key = undef,
 
   $imap_sieve = undef,
-  $av = true,
+  $av = false,
 
   $local_lmtp_host = undef,
   $local_lmtp_port = 24,
