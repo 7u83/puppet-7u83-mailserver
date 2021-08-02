@@ -1,0 +1,18 @@
+#
+# managed by puppet
+#
+
+# This aliases file is dedicated to Sympa Mailing List Manager
+# You should edit your sendmail.mc or sendmail.cf file to declare it
+
+# Robot aliases for Sympa.
+sympa:                 "| <%= @libexec_dir %>/queue sympa@m<%= @domain %>"
+listmaster:            "| <%= @libexec_dir %>/queue listmaster@m<%= @domain %>"
+bounce+*:              "| <%= @libexec_dir %>/bouncequeue sympa@m<%= @domain %>"
+abuse-feedback-report: "| <%= @libexec_dir %>/bouncequeue sympa@m<%= @domain %>"
+sympa-request:         postmaster
+sympa-owner:           postmaster
+#listserv:             sympa
+#listserv-request:     sympa-request
+#majordomo:            sympa
+#listserv-owner:       sympa-owner
