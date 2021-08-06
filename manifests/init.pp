@@ -66,12 +66,12 @@ class mailserver (
 	#
 	# DMARC params
 	#
-	$dmarc_filter = true,
+	$dmarc_filter = false,
 
 	#
 	# SPAM
 	#
-	$spam_filter = true,
+	$spam_filter = false,
 	$spam_reject_score = undef,
 	$spam_greylist_score = undef,
 	$spam_add_header_score = undef,
