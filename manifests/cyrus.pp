@@ -22,11 +22,20 @@ class mailserver::cyrus(
 	$pkg_version = "latest",
 	$pkg_settings = undef,
   $sieve = undef,
+  $lmtp_port = '24',
 )
 inherits mailserver::cyrus::params
 {
   class {"mailserver::cyrus::install":
 
+  }
+  service {"imapd":
+    ensure    => running,
+    require   => Anchor['cyrus_pkg_installed'],
+    subscribe => [
+      File[$cyrus_conf],
+      File[$imapd_conf]
+    ]
   }
 }
 
